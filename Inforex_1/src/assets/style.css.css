@@ -1,0 +1,52 @@
+/* CSS file */
+@namespace s "library://ns.adobe.com/flex/spark";
+@namespace mx "library://ns.adobe.com/flex/mx";
+
+
+s|Button.nav
+{
+	fontSize: 14;
+	cornerRadius: 5; 
+	fontWeight: normal;
+	borderColor:#cccccc;
+	height: 35;
+}
+mx|MenuBar
+{
+	chromeColor: #7ec0d0;
+	color: #000000;
+	symbolColor: #000000;
+	
+}
+s|Form
+{
+	skinClass: ClassReference("spark.skins.spark.StackedFormSkin");
+}
+s|FormHeading
+{
+	skinClass: ClassReference("spark.skins.spark.StackedFormHeadingSkin");
+}        
+s|FormItem
+{
+	skinClass: ClassReference("spark.skins.spark.StackedFormItemSkin");
+}
+
+s|Form.unstacked
+{
+	skinClass: ClassReference("spark.skins.spark.FormSkin");
+}
+s|FormHeading.unstacked
+{
+	skinClass: ClassReference("spark.skins.spark.FormHeadingSkin");
+}        
+s|FormItem.unstacked
+{
+	skinClass: ClassReference("spark.skins.spark.FormItemSkin");
+}
+s|NumericStepper.unstacked
+{
+	skinClass: ClassReference("spark.skins.spark.NumericStepperSkin");
+}
+mx|CursorManager {
+	busy-cursor: Embed(source="assets/busyCursor.swf");
+}

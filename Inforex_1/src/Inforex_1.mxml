@@ -1,0 +1,3014 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
+					   xmlns:s="library://ns.adobe.com/flex/spark"
+					   xmlns:mx="library://ns.adobe.com/flex/mx"
+					   xmlns:fnicollet="http://www.flex-tutorial.fr/2009"
+					   xmlns:ratesservice="services.ratesservice.*"
+					   xmlns:valueObjects="valueObjects.*"
+					   xmlns:toaster="com.fnicollet.toaster.*"
+					   width="100%" activate="windowedapplication1_activateHandler(event)"
+					   currentState="Login"
+					   deactivate="windowedapplication1_deactivateHandler(event)"
+					   status="Please enter your credentials."
+					   windowComplete="windowedapplication1_windowCompleteHandler(event)"
+					   height="100%">
+	<fx:Style source="assets/style.css.css"/>
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.fiber.runtime.lib.DateTimeFunc;
+			import com.adobe.serializers.utility.TypeUtility;
+			import com.fnicollet.toaster.ToasterPosition;
+			import com.fnicollet.toaster.event.ToastEvent;
+			import com.fnicollet.toaster.event.ToasterEvent;
+			import com.fnicollet.toaster.message.ubuntu.ToastMessageUbuntu;
+			
+			import flash.display.NativeWindowDisplayState;
+			import flash.events.NativeWindowDisplayStateEvent;
+			import flash.net.navigateToURL;
+			import flash.net.sendToURL;
+			import flash.utils.flash_proxy;
+			import flash.utils.setInterval;
+			
+			import flashx.textLayout.factory.TruncationOptions;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.core.Window;
+			import mx.events.AIREvent;
+			import mx.events.FlexEvent;
+			import mx.events.ValidationResultEvent;
+			import mx.managers.CursorManager;
+			import mx.managers.FocusManager;
+			import mx.rpc.Fault;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.utils.ObjectUtil;
+			import mx.validators.Validator;
+			
+			import spark.components.Window;
+			import spark.events.GridItemEditorEvent;
+			import spark.events.GridSelectionEvent;
+			import spark.events.IndexChangeEvent;
+			import spark.events.TextOperationEvent;
+			
+			import valueObjects.Bureau_Details;
+			import valueObjects.Bureaus;
+			import valueObjects.Currencies;
+			import valueObjects.Inbox;
+			import valueObjects.My_Auctions;
+			import valueObjects.Rates;
+			
+			[Bindable]
+			public var today:Date = new Date();
+			[Bindable]
+			public var inbox_selected:Inbox = new Inbox;
+			[Bindable]
+			public var notification_selected:Inbox = new Inbox;
+			[Bindable]
+			public var sent_selected:Inbox = new Inbox;
+			[Bindable]
+			public var auction_selected:Auctions = new Auctions;
+			[Bindable]
+			public var sale_selected:Auctions = new Auctions;
+			[Bindable]
+			public var bureau_item:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var pockets:Object = new Object;
+			[Bindable]
+			public var my_auction_selected:My_Auctions = new My_Auctions;
+			[Bindable]
+			public var my_sale_selected:My_Auctions = new My_Auctions;
+			
+			[Embed(source="assets/notification.mp3")]
+			[Bindable]
+			public var notifSndCls:Class;
+			
+			[Embed(source="assets/winner.mp3")]
+			[Bindable]
+			public var winnerSoundCls:Class;
+			
+			public var notifSound:Sound = new notifSndCls() as Sound;
+			public var winnerSound:Sound = new winnerSoundCls() as Sound;
+			public var audioChannel:SoundChannel;
+			public var winnerChannel:SoundChannel;
+			
+			[Embed(source="assets/bureau_online.png")]
+			[Bindable]
+			public var onlineIndicator:Class;
+			[Embed(source="assets/bureau_offline.png")]
+			[Bindable]
+			public var offlineIndicator:Class;
+			[Embed(source="assets/message2.png")]
+			[Bindable]
+			public var newMsgIcon:Class;
+			[Embed(source="assets/notification_msg2.png")]
+			[Bindable]
+			public var newNotificationIcon:Class;
+			[Embed(source="assets/notification_msg1.png")]
+			[Bindable]
+			public var notificationIcon:Class;
+			[Embed(source="assets/message0.png")]
+			[Bindable]
+			public var messageIcon:Class;
+			[Embed(source="assets/bid.png")]
+			[Bindable]
+			public var bidIcon:Class;
+			[Embed(source="assets/rates.png")]
+			[Bindable]
+			public var ratesIcon:Class;
+			[Embed(source="assets/logo.png")]
+			[Bindable]
+			public var logoImg:Class;
+			[Embed(source="assets/add_request.png")]
+			[Bindable]
+			public var requestAddIcon:Class;
+			[Embed(source="assets/my_transactions.png")]
+			[Bindable]
+			public var myTransactionsIcon:Class;
+			[Embed(source="assets/my_offers.png")]
+			[Bindable]
+			public var myOffersIcon:Class;
+			[Embed(source="assets/close_auction.png")]
+			[Bindable]
+			public var closeAuctionIcon:Class;
+			[Embed(source="assets/cancel.png")]
+			[Bindable]
+			public var cancelIcon:Class;
+			[Embed(source="assets/refresh.png")]
+			[Bindable]
+			public var refreshIcon:Class;
+			[Embed(source="assets/globe.png")]
+			[Bindable]
+			public var globeIcon:Class;
+			[Embed(source="assets/profile.png")]
+			[Bindable]
+			public var profileIcon:Class;
+			[Embed(source="assets/sell.png")]
+			[Bindable]
+			public var sellIcon:Class;
+			[Embed(source="assets/buy.png")]
+			[Bindable]
+			public var buyIcon:Class;
+			[Embed(source="assets/local.png")]
+			[Bindable]
+			public var localIcon:Class;
+			[Embed(source="assets/busyCursor.swf")]
+			public static const busyCursor1:Class;
+			
+			
+			public var rates3:ArrayCollection = new ArrayCollection();
+			//runs updates every 15s
+			private var timer:Timer = new Timer(15000);
+			//starts the 15s update timer functions
+			private var timer_update:Timer = new Timer(5000, 1);
+			//kills eventlisteners on toasts
+			private var timer_listener:Timer =new Timer(5000, 1);
+			public var errorTracker:Object = new Object();
+			public var remove_item:int;
+			public var notification_idTracker:int;
+			public var msg_idTracker:int;
+			public var selected_item:String;
+			protected var loader:URLLoader;
+			protected var request:URLRequest;
+			
+			private function sendUbuntuMessage(position:String,caption:String,icon:String,persist:Boolean, id:Number=1):void {
+				var toastMessage:ToastMessageUbuntu = new ToastMessageUbuntu;
+				if(persist){
+					toastMessage.imageSource = "assets/"+icon+".png";
+					toastMessage.sampleCaption = caption;
+					if(id==1){
+						customToaster1.toast(toastMessage, position);
+					} else if(id==2) {
+						customToaster2.toast(toastMessage, position);
+					}
+					
+				} else {
+					if(pockets.notif_caption != caption){
+						toastMessage.imageSource = "assets/"+icon+".png";
+						toastMessage.sampleCaption = caption;
+						if(id==1){
+							customToaster1.toast(toastMessage, position);
+						} else if(id==2) {
+							customToaster2.toast(toastMessage, position);
+						}
+						pockets.notif_caption = caption;
+					}
+				}
+				
+			}
+			
+			protected function windowedapplication1_windowCompleteHandler(event:AIREvent):void
+			{
+				this.nativeWindow.maximize();
+				//styleManager.getStyleDeclaration("mx.managers.CursorManager").setStyle ("busyCursor", busyCursor1); // correct way of assigning.
+				//this.addEventListener(NativeWindowDisplayStateEvent.DISPLAY_STATE_CHANGE,trackState);
+				
+			}
+			
+			protected function local_rate_btn_clickHandler(event:MouseEvent):void
+			{
+				currentState="Local_Rates";
+			}
+			
+			public static function leadingZero(value:Number):String
+			{
+				if(value < 10){
+					return "0" + value;
+				}
+				return value.toString();    
+			}
+			
+			public static function bidHours(value:String):String
+			{
+				
+				var valueStr:String = value + " Hours";
+				
+				//value = value + " Hours";
+				//return value.toString();  
+				trace(value + " " + valueStr);
+				//return "0" + value;
+				return valueStr;
+			}
+			
+			protected function edit_profile_btn_clickHandler(event:MouseEvent):void
+			{
+				var item:Object = new Object();
+				item.token = auth_data.token;
+				//item.bureaus_name = profile_bureau.text;
+				item.premises = profile_premises.text;
+				item.city = profile_city.text;
+				item.cellphone = profile_mobile.text;
+				item.officephone = profile_officephone.text;
+				item.email = profile_email.text;
+				item.street = profile_street.text;
+				
+				if(new_pass1.text != null || new_pass2.text != null || old_pass.text != null){
+					//user is attempting to change pass
+					if(new_pass1.text == new_pass2.text){
+						item.password = new_pass2.text;
+						updateProfileResult.token = ratesService.updateProfile(item);
+					} else {
+						this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, "Check Re-typed password", "error", true);
+					}
+				} else {
+					updateProfileResult.token = ratesService.updateProfile(item);
+				}
+				
+//				Alert.show("Profile details updated", "Notification");
+			}
+			
+			protected function profile_btn_clickHandler(event:MouseEvent):void
+			{
+				currentState="Profile";
+				var item:Object = new Object();
+				item.token = auth_data.token;
+				getBureauDetailsResult2.token = ratesService.getBureauDetails(item);
+				
+			}
+			
+			protected function auction_room_btn_clickHandler(event:MouseEvent):void
+			{
+				currentState="Auction";
+				customToaster1.removeEventListener(MouseEvent.CLICK, auction_room_btn_clickHandler);
+			}
+			
+			protected function sell_room_btn_clickHandler(event:MouseEvent):void
+			{
+				currentState="Sell";
+				customToaster1.removeEventListener(MouseEvent.CLICK, sell_room_btn_clickHandler);
+			}
+			
+			protected function sell_btn_clickHandler(event:MouseEvent):void
+			{
+				currentState="Sell";
+				customToaster1.removeEventListener(MouseEvent.CLICK, auction_room_btn_clickHandler);
+			}
+			
+			protected function international_rates_btn_clickHandler(event:MouseEvent):void
+			{
+				currentState="International_Rates";
+			}
+			
+			protected function new_auction_btn_clickHandler(event:MouseEvent):void
+			{
+				currentState="Auction_New";
+				auction_amount_txt.text = "";
+				buy_rate_txt.text = "";
+				buy_expiry_date.text = "";
+				getCurrenciesResult2.token = ratesService.getCurrencies();
+			}
+			
+			protected function new_sell_btn_clickHandler(event:MouseEvent):void
+			{
+				currentState="Sell_New";
+				sell_amount_txt.text = "";
+				sell_rate_txt.text = "";
+				sell_expiry_date.text = "";
+				getCurrenciesResult2.token = ratesService.getCurrencies();
+			}
+			
+			protected function save_auction_btn_clickHandler(buyDatedTime:String):void
+			{
+				auctions = new Auctions;
+				auctions.amount = auction_amount_txt.text;
+				auctions.from_currency = buy_currency_dlist.selectedItem.currency_id; 
+				//auctions.expires = buyDatedTime;
+				auctions.email = "";
+				auctions.min_rate = buy_rate_txt.text;
+				auctions.bureaus_name = auth_data.token;
+				auctions.status = buyDatedTime;
+				
+				createAuctionResult.token = ratesService.createAuction(auctions);
+			}
+			
+			protected function save_sale_btn_clickHandler(sellDatedTime:String):void
+			{
+				sales = new Auctions;
+				sales.amount = sell_amount_txt.text;
+				sales.from_currency = sell_currency_dlist.selectedItem.currency_id; 
+				sales.status = sellDatedTime;
+				sales.email = "";
+				sales.min_rate = sell_rate_txt.text;
+				sales.bureaus_name = auth_data.token;
+				
+				createSaleResult.token = ratesService.createSale(sales);
+			}
+			
+			protected function login_btn_clickHandler(event:MouseEvent):void
+			{
+				//currentState="Local_Rates";
+				var credentials:Object = new Object();
+				credentials.version = this.checkAppVersion();
+				credentials.username = username_txt.text;
+				credentials.password = password_txt.text;
+				userAuthResult.token = ratesService.userAuth(credentials);
+			}
+			
+			protected function auction_dg_selectionChangeHandler(event:Object):void
+			{
+				currentState="Auction_Details";
+				if(auctions.bureaus_id == auth_data.bureaus_id){
+					//cancel_auction_btn.enabled=true;
+					place_offer_btn.enabled=false;
+					auction_msg_btn.enabled=false;
+				} else {
+					//cancel_auction_btn.enabled=false;
+					place_offer_btn.enabled=true;
+					auction_msg_btn.enabled=true;
+				}
+				//trace("auctions_selected:" + ObjectUtil.toString(auction_selected));
+				auction_selected = auctions;
+				//@todo if the above works ok, then bind it to the form in auction details.
+				
+				buyDetailsHeading.label = "Request #" + auction_selected.order_id.toString();
+				bureaus_nameLabel.text = auction_selected.bureaus_name;
+				officephoneLabel.text = auction_selected.officephone;
+				cellphoneLabel.text = auction_selected.cellphone;
+				emailLabel.text = auction_selected.email as String;
+				premisesLabel.text = auction_selected.premises;
+				streetLabel.text = auction_selected.street as String;
+				cityLabel.text = auction_selected.city;
+
+			}
+			
+			protected function place_offer_btn_clickHandler(event:MouseEvent):void
+			{
+				currentState="Auction_Offer";
+				offer_txt.text = "";
+				latest_offer_dated.text = "";
+				offerTermsCheck.selected = false;
+				//trace(auctions.min_rate + auctions.bureaus_id);
+				getLatestOfferResult.token = ratesService.getLatestOffer(auction_selected.auctions_id);
+				//trace(auctions.auctions_id);
+			}
+			
+			protected function place_bid_btn_clickHandler(event:MouseEvent):void
+			{
+				currentState="Sell_Bid";
+				bid_txt.text = "";
+				bidTermsCheck.selected = false;
+				latest_bid_dated.text = "";
+				//trace(auctions.min_rate + auctions.bureaus_id);
+				getLatestBidResult.token = ratesService.getLatestBid(sale_selected.auctions_id);
+				//trace(auctions.auctions_id);
+			}
+			
+			
+			protected function getAllRatesResult_resultHandler():void
+			{
+				this.network_status(1);
+				//getAllRatesResult.token = ratesService.getAllRates();
+			}
+			
+			protected function local_rates_dg_creationCompleteHandler(event:FlexEvent):void
+			{
+				getAllRatesResult.token = ratesService.getAllRates();
+				if(getAllRatesResult.lastResult)
+					this.network_status(1);
+				local_rates_dg.dataProvider = getAllRatesResult.lastResult;
+				
+				//timer = new Timer(50000);
+				timer.addEventListener(TimerEvent.TIMER, getUpdates);
+				timer.start();
+				
+				var hourly:Timer = new Timer(1800000);
+				hourly.addEventListener(TimerEvent.TIMER, getSlowUpdates);
+				hourly.start();
+			}
+			
+			//runs every 15 or so seconds
+			private function getUpdates(evt:TimerEvent):void{
+				getAllRatesResult.token = ratesService.getAllRates();
+				getActiveAuctionsResult.token = ratesService.getActiveAuctions();
+				getActiveSalesResult.token = ratesService.getActiveSales();
+				getInboxResult.token = ratesService.getInbox(auth_data.token);
+				getSentResult.token = ratesService.getSent(auth_data.token);
+				getNotificationsResult.token = ratesService.getNotifications(auth_data.token);
+			}
+			
+			//updates happen hourly
+			private function getSlowUpdates(e:TimerEvent):void
+			{
+				//trace('announcing...');
+				getAnnouncementsResult.token = ratesService.getAnnouncements();
+			}
+			
+			
+			protected function my_rates_grid_creationCompleteHandler(event:FlexEvent):void
+			{
+				getMyRatesResult.token = ratesService.getMyRates(auth_data.token);
+				//trace(my_Rates);
+			}
+			
+			protected function my_rates_grid_gridItemEditorSessionSaveHandler(event:GridItemEditorEvent):void
+			{
+				ratesService.updateRates(my_Rates);
+				//enter a pull to local_rates_dg to update it instantly instead of waiting for our timer
+				
+			}
+			
+			protected function getMyRatesResult_resultHandler(event:ResultEvent):void
+			{
+				rates3 = getMyRatesResult.lastResult as ArrayCollection;
+				//rates2 = my_Rates;
+				//trace(ObjectUtil.toString(rates3.getItemIndex());
+				
+			}
+			
+			protected function my_rates_grid_selectionChangeHandler(event:GridSelectionEvent):void
+			{
+				//trace(ObjectUtil.toString(my_Rates));
+				//trace(my_Rates);
+				
+			}
+			
+			protected function userAuthResult_resultHandler(event:ResultEvent):void
+			{
+				if(event.result == null){
+					Alert.show('Invalid credentials.');
+					password_txt.text = "";
+				} else {
+					auth_data = event.result as Auth_Data;
+					pockets.banner_url = auth_data.init_data.banner_url;
+					pockets.server_time = auth_data.init_data.server_time;
+					pockets.international_url = auth_data.init_data.international_url;
+					//trace("Time diff:"+DateTimeFunc.dateDiff("n", today, pockets.server_time));
+					var now_now:Date = new Date();
+					if(DateTimeFunc.dateDiff("n", now_now, pockets.server_time) > 5){
+						Alert.show('Please correct your system time and restart Inforex. Your time is '+now_now);
+						password_txt.text = "";
+					} else {
+						today = pockets.server_time;
+						currentState = "Local_Rates";
+						// = auth_data.bureaus_name;
+						var app_version:String = this.checkAppVersion();
+						status = "Logged in as " + auth_data.bureaus_name + " | Inforex © Version "+app_version;
+						online_indicator.visible= true;
+						
+						timer_update.addEventListener(TimerEvent.TIMER, checkUpdates);
+						timer_update.start();
+					}
+				}
+			}
+			
+			
+			protected function auction_dg_creationCompleteHandler(event:FlexEvent):void
+			{
+				getActiveAuctionsResult.token = ratesService.getActiveAuctions();
+			}
+			
+			
+			protected function cancel_offer_btn_clickHandler(event:MouseEvent):void
+			{
+				currentState = "Auction";
+			}
+			
+			protected function cancel_bid_btn_clickHandler(event:MouseEvent):void
+			{
+				currentState = "Sell";
+			}
+			
+			protected function inbox_dg_creationCompleteHandler(event:FlexEvent):void
+			{
+				getInboxResult.token = ratesService.getInbox(auth_data.token);
+			}
+			
+			
+			protected function sent_dg_creationCompleteHandler(event:FlexEvent):void
+			{
+				getSentResult.token = ratesService.getSent(auth_data.token);
+			}
+			
+			
+			protected function send_msg_clickHandler(event:MouseEvent):void
+			{
+				inbox2.bureaus_name = to_dlist.selectedItem.bureaus_name;
+				inbox2.message = msg_txtarea.text;
+				inbox2.msg_status = auth_data.token;
+				
+				//trace(ObjectUtil.toString(inbox2));
+				composeMsgResult.token = ratesService.composeMsg(inbox2);
+				msg_txtarea.text = "";
+			}
+
+			protected function errorHandler(event:FaultEvent):void
+			{
+				var error_data:String = event.fault.faultCode;
+				var error_string:String = event.fault.faultString;
+				//trace("-------------");
+				//trace(ObjectUtil.toString((event.fault)));
+				//trace("event.fault.faultCode:"+event.fault.faultCode);
+				//trace("errorTracker: " + ObjectUtil.toString(errorTracker));
+				
+				//track error timer
+				if(errorTracker[error_string] != null){
+					//trace(ObjectUtil.toString(nativeWindow.stage));
+					if(DateTimeFunc.dateDiff("n",errorTracker[error_string],DateTimeFunc.now()) > 5 && pockets.window_focus == true){
+						//trace("creating new error coz maximised");
+						this.errorNotifHandler(error_data, error_string);
+						errorTracker[error_string]= DateTimeFunc.now();
+						
+					} else {
+						//trace("silenced new error coz minimized");
+					}
+					
+					
+				} else {
+					if(error_data){
+						errorTracker[error_string]= DateTimeFunc.now();
+					}
+					this.errorNotifHandler(error_data, error_string);
+					//Alert.show(event.fault.faultString);
+				}
+			}
+			
+			
+			private function errorNotifHandler(error_data:String, error_string:String):void{
+				
+				var caption:String;
+				var icon:String;
+				var persist:Boolean = true;
+				switch(error_data)
+				{
+					case "3":
+					{
+						this.network_status(1);
+						caption="No active auctions at this time";
+						icon="auction";
+						break;
+					}
+						
+					case "4":
+					{
+						this.network_status(1);
+						caption="No active sales at this time";
+						icon="auction";
+						break;
+					}
+					
+					case "Channel.Call.Failed":
+					{
+						this.network_status(0);
+						caption="Internet connection error";
+						icon="internet";
+						break;
+					}
+					case "Client.Error.MessageSend":
+					{
+						this.network_status(0);
+						caption="Internet Connection failure";
+						icon="internet";
+						break;
+					}
+					case "Client.Error.DeliveryInDoubt":
+					{
+						caption="Server connection error";
+						icon="internet";
+						break;
+					}
+						
+					default:
+					{
+						if(error_string == "Login Error: Please restart Inforex"){
+							if(pockets.criticalError){
+								//dont need to say bye bye again
+							} else {
+								//exit the application, client logged in elsewhere
+								caption="You have logged in elsewhere, exiting now!";
+								icon="error";
+								pockets.criticalError = error_string;
+								setInterval(this.terminateInforex, 10000);
+								trace('terminating Inforex');
+							}
+							
+							
+						} else {
+							//this.network_status(0);
+							caption=error_string;
+							icon="error";
+						}
+						break;
+						
+					}
+				}
+				this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, caption, icon, persist);
+				//Alert.show(error_data + " " + error_string);
+			}
+			
+			private function terminateInforex():void{
+				exit();
+				
+			}
+			
+			private function network_status(connected:Number):void{
+				//@todo bind a var to faultCode so as to update network status with every call.
+				if(connected){
+					online_indicator.source = "assets/online.swf";
+					online_indicator.toolTip = "System connected";
+					pockets.online_indicator = 1;
+				} else {
+					online_indicator.source = "assets/offline.swf";
+					online_indicator.toolTip = "Not connected";
+					pockets.online_indicator = 0;
+				}
+			}
+			
+			
+			protected function orig_dlist_creationCompleteHandler(event:FlexEvent):void
+			{
+				getCurrenciesResult.token = ratesService.getCurrencies();
+			}
+			
+			protected function createAuctionResult_resultHandler(event:ResultEvent):void
+			{
+				//Alert.show("Auction created", "Notice");
+				this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, "Requested submitted", "success", true);
+				currentState = "Auction";
+			}
+			
+			
+			protected function cancel_auction_btn_clickHandler(event:MouseEvent):void
+			{
+				cancelAuctionResult.token = ratesService.cancelAuction(my_auction_selected.auctions_id);
+			}
+			
+			protected function cancel_sale_btn_clickHandler(event:MouseEvent):void
+			{
+				cancelSaleResult.token = ratesService.cancelSale(my_sale_selected.auctions_id);			
+			}
+			
+			protected function cancelAuctionResult_resultHandler(event:ResultEvent):void
+			{
+				if(event.result != null){
+					this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, "Request cancelled", "error", true);
+					currentState = "My_Auctions";
+				}
+			}
+			
+			protected function auction_msg_btn_clickHandler(event:MouseEvent):void
+			{
+				//@todo change to that bureau in sendto field
+				//to_dlist.selectedItem = auctions.bureaus_name;
+				//currentState = "Auction_Message";
+				//main_tabnav.selectedIndex = 1;
+				//messages_tabnav.selectedIndex = 2;
+				//trace("auctionsMsg:" + ObjectUtil.toString(to_dlist));
+				
+				currentState = "Auction_Message";
+				
+				main_tabnav.selectedIndex = main_tabnav.getChildIndex(main_tabnav.getChildByName('messages_tab'));
+				
+				//trace(main_tabnav.selectedIndex);
+				
+				//messages_tabnav.selectedIndex = messages_tabnav.getChildIndex(messages_tabnav.getChildByName('compose_tab'));
+				
+				//messages_tabnav.selectedIndex = messages_tabnav.getChildIndex(messages_tabnav.getChildByName('compose_tab'));
+				//trace(messages_tabnav.selectedIndex);
+				bureau_item = new ArrayCollection([{bureaus_id: auction_selected.bureaus_id, bureaus_name: auction_selected.bureaus_name}]);
+				//messages_tabnav.selectedIndex = messages_tabnav.getChildIndex(messages_tabnav.getChildByName('compose_tab'));
+				//bureau_item = new ArrayCollection([{bureaus_id: auctions.bureaus_id, bureaus_name: auctions.bureaus_name}]);
+			}
+			
+			
+			protected function to_dlist_creationCompleteHandler(event:FlexEvent):void
+			{
+				getBureausResult.token = ratesService.getBureaus();
+			}
+			
+			protected function inbox_dg_selectionChangeHandler(event:GridSelectionEvent):void
+			{
+				currentState="Messages";
+				inbox_selected = inbox;
+				msg_bureaus_name.text = inbox.bureaus_name;
+				msg_datedDateField.text = dateFormatter.format(inbox.dated);
+				msg_messageLabel.text = inbox.message;
+				pockets.inbox_selectedIndex = inbox_dg.selectedIndex;
+				//trace(ObjectUtil.toString(pockets));
+				//mark message as read
+				if(inbox.msg_status == "Unread"){
+					trace(inbox.msg_status);
+					var msg_details:Object = { token: auth_data.token,msg_id: inbox.msg_id };
+					readMsgResult.token = ratesService.readMsg(msg_details);
+				}
+				//trace("second:"+inbox.msg_status+"auth_data.bureaus_id"+auth_data.bureaus_id+"inbox.from_user_id"+inbox.from_user_id);
+			}
+			
+			
+			protected function delete_sent_msg_btn_clickHandler(event:MouseEvent):void
+			{
+				sent_selected.message = auth_data.token;
+				deleteSentMsgResult.token = ratesService.deleteMsg(sent_selected);
+			}
+			
+			
+			protected function del_msg_btn_clickHandler(event:MouseEvent):void
+			{
+				inbox_selected.message = auth_data.token;
+				deleteMsgResult.token = ratesService.deleteMsg(inbox_selected);
+			}
+			
+			protected function deleteSentMsgResult_resultHandler(event:ResultEvent):void
+			{
+				sent_dg.dataProvider.removeItemAt(pockets.sent_selectedIndex);
+				currentState = "Message_Deleted";
+				//Alert.show("Message deleted", "Notification");
+				this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, "Message deleted", "error", true);
+			}
+			
+			protected function sent_dg_selectionChangeHandler(event:GridSelectionEvent):void
+			{
+				currentState = "Messages_Sent";
+				pockets.sent_selectedIndex = sent_dg.selectedIndex;
+				sent_selected = inbox2;
+				sent_bureaus_name.text = inbox2.bureaus_name;
+				sent_datedDateField.text = dateFormatter.format(inbox2.dated);
+				sent_messageLabel.text = inbox2.message;
+				//trace(ObjectUtil.toString(sent_selected));
+			}
+			
+			protected function composeMsgResult_resultHandler(event:ResultEvent):void
+			{
+				//Alert.show("Message sent", "Notification");
+				this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, "Message sent", "success", true);
+				getSentResult.token = ratesService.getSent(auth_data.token);
+			}
+			
+			protected function reply_msg_btn_clickHandler(event:MouseEvent):void
+			{
+				currentState = "Messages_Reply";
+				messages_tabnav.selectedIndex = messages_tabnav.getChildIndex(messages_tabnav.getChildByName('compose_tab'));
+				bureau_item = new ArrayCollection([{bureaus_id: 3, bureaus_name: inbox.bureaus_name}]);
+			}
+			
+			protected function to_dlist_changeHandler(event:IndexChangeEvent):void
+			{
+				//trace(ObjectUtil.toString(to_dlist.selectedItem));
+			}
+			
+			protected function send_reply_btn_clickHandler(event:MouseEvent):void
+			{
+				inbox2 = new Inbox;
+				inbox2.bureaus_name = replyto_dlist.selectedItem.bureaus_name;
+				inbox2.message = replymsg_txtarea.text;
+				inbox2.msg_status = auth_data.token;
+				
+				//trace(ObjectUtil.toString(inbox2));
+				composeMsgResult.token = ratesService.composeMsg(inbox2);
+				replymsg_txtarea.text = "";
+				currentState = "Messages";
+			}
+			
+			protected function replyto_dlist_creationCompleteHandler(event:FlexEvent):void
+			{
+				//var bureau_item:ArrayCollection = new ArrayCollection([{bureaus_id: 3, bureaus_name: inbox.bureaus_name}]);
+				bureau_item = new ArrayCollection([{bureaus_id: inbox.from_user_id, bureaus_name: inbox.bureaus_name}]);
+				//replyto_dlist.dataProvider= bureau_item;
+				replyto_dlist.selectedIndex = 0;
+			}
+			
+			protected function auction_msg_send_btn_clickHandler(event:MouseEvent):void
+			{
+				inbox2 = new Inbox;
+				inbox2.bureaus_name = auction_msg_dlist.selectedItem.bureaus_name;
+				inbox2.message = auction_msg_txtarea.text;
+				inbox2.msg_status = auth_data.token;
+				
+				//trace(ObjectUtil.toString(inbox2));
+				composeMsgResult.token = ratesService.composeMsg(inbox2);
+				auction_msg_txtarea.text = "";
+				currentState = "Auction";
+			}
+			
+			protected function auction_msg_dlist_creationCompleteHandler(event:FlexEvent):void
+			{
+				//var bureau_item:ArrayCollection = new ArrayCollection([{bureaus_id: 3, bureaus_name: inbox.bureaus_name}]);
+				bureau_item = new ArrayCollection([{bureaus_id: auctions.bureaus_id, bureaus_name: auctions.bureaus_name}]);
+				//replyto_dlist.dataProvider= bureau_item;
+				auction_msg_dlist.selectedIndex = 0;
+			}
+			
+			private function date_format(item:Object,column:GridColumn):String 
+			{ 
+				return msgDateFormatter.format(item[column.dataField]);
+			}
+			
+						
+			protected function target_dlist_creationCompleteHandler(event:FlexEvent):void
+			{
+				
+				//trace(target_dlist.selectedIndex);
+				getCurrenciesResult2.token = ratesService.getCurrencies();
+			}
+			
+			protected function getCurrenciesResult_resultHandler(event:ResultEvent):void
+			{
+				//all_currencies = getCurrenciesResult.lastResult[0] as Currencies;
+				//trace(ObjectUtil.toString(my_Rates));
+			}
+			
+			
+			protected function min_rate_txt_changeHandler():void
+			{
+				var expected_amount:Number = 0;
+				if(auction_amount_txt.text != ""){
+					var auction_amount:Number = parseFloat(auction_amount_txt.text);
+					var min_rate:Number = parseFloat(buy_rate_txt.text);
+					expected_amount = auction_amount * min_rate;
+					
+					
+				}
+				buy_expected_lbl.text = moneyFormatter.format(expected_amount.toString());
+				
+//				if(auction_amount_txt.text != ""){
+//					var auction_amount:Number = parseFloat(auction_amount_txt.text);
+//					var min_rate:Number;
+//					var expected_amount:Number
+//					if(min_rate_txt.text != "" && pockets.s2b==1){
+//						min_rate_txtBS.text = ObjectUtil.toString((1 / parseFloat(min_rate_txt.text)));
+//						min_rate = parseFloat(min_rate_txt.text); 
+//						expected_amount = auction_amount * min_rate;
+//					
+//					}
+//					if(min_rate_txtBS.text != "" && pockets.b2s==1){
+//						min_rate_txt.text = ObjectUtil.toString((1 / parseFloat(min_rate_txtBS.text)));
+//						min_rate = parseFloat(min_rate_txtBS.text);
+//						expected_amount = auction_amount * min_rate;
+//					}
+//					
+//					
+//					//trace(expected_amount + " " + min_rate + " " + min_rate_txt.text);
+//					expected_amount_txt.text = moneyFormatter.format(expected_amount.toString());
+//				}
+			}
+			
+			protected function sell_min_rate_txt_changeHandler():void
+			{
+				var expected_amount:Number = 0;
+				if(sell_amount_txt.text != ""){
+					var sell_amount:Number = parseFloat(sell_amount_txt.text);
+					var sell_min_rate:Number = parseFloat(sell_rate_txt.text);
+					expected_amount = sell_amount * sell_min_rate;
+				}
+				sell_expected_lbl.text = moneyFormatter.format(expected_amount.toString());
+			}
+			
+			protected function reply_cancel_btn_clickHandler(event:MouseEvent):void
+			{
+				currentState = "Messages";
+			}
+			
+			protected function auction_msg_cancel_btn_clickHandler(event:MouseEvent):void
+			{
+				currentState = "Auction_Details";
+			}
+			
+			protected function getLatestBidResult_resultHandler(event:ResultEvent):void
+			{
+				latest_Bid = getLatestBidResult.lastResult as Latest_Bid;
+				if(latest_Bid.bureaus_name != null){
+					latest_bid_dated.text = "At: " + msgDateFormatter.format(latest_Bid.bids_dated);;
+				}
+			}
+			
+			protected function deleteMsgResult_resultHandler(event:ResultEvent):void
+			{
+				inbox_dg.dataProvider.removeItemAt(pockets.inbox_selectedIndex);
+				currentState = "Message_Deleted";
+				//Alert.show("Message deleted", "Notification");
+				this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, "Message deleted", "error", true);
+			}
+			
+			protected function local_rates_dg_doubleClickHandler(event:MouseEvent):void
+			{
+				currentState = "Local_Rates_Details";
+				//trace(ObjectUtil.toString(local_rates_dg.selectedItem));
+				var item:Object = new Object();
+				item.bureaus_id = local_rates_dg.selectedItem.bureaus_id;
+				item.token = auth_data.token;
+				this.getBureauDetails(item);
+				
+			}
+			
+			
+			protected function getBureauDetails(item:Object):void
+			{
+				getBureauDetailsResult.token = ratesService.getBureauDetails(item);
+			}
+			
+			protected function getBureauDetailsResult_resultHandler(event:ResultEvent):void
+			{
+				bureau_Details = getBureauDetailsResult.lastResult as Bureau_Details;
+			}
+			
+			protected function hide_btn_clickHandler(event:MouseEvent):void
+			{
+				currentState = "Local_Rates";
+			}
+			
+			protected function getInboxResult_resultHandler(event:ResultEvent):void
+			{
+				if(getInboxResult.lastResult== null){
+				
+				} else {
+					//trace(ObjectUtil.toString(inbox2));
+					inbox2 = getInboxResult.lastResult[0] as Inbox;
+					if(inbox2.msg_status == "Unread"){
+						messages_tab.icon = newMsgIcon;
+						//trace('inbox lbl NEW');
+						if(inbox2.msg_id != msg_idTracker){
+							audioChannel = notifSound.play(0,2);
+							this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, "New message(s)", "message", true);
+							//start listener for 10s
+							customToaster1.addEventListener(MouseEvent.CLICK, showInbox);
+//							timer_listener.addEventListener(TimerEvent.TIMER, killToasterInboxListener);
+//							timer_listener.start();
+						}
+						
+					} else {
+						messages_tab.icon = messageIcon;
+						//trace('inbox lbl READ');
+					}
+					msg_idTracker = inbox2.msg_id;
+				}
+				
+				
+			}
+			
+			protected function killToasterInboxListener(e:TimerEvent):void
+			{
+				customToaster1.removeEventListener(MouseEvent.CLICK, showInbox);
+				trace('killing toast inbox listener');
+				
+			}
+			
+			protected function killToasterAuctionNewListener(e:TimerEvent):void
+			{
+				customToaster1.removeEventListener(MouseEvent.CLICK, auction_room_btn_clickHandler);
+				trace('killing toast inbox listener');
+				
+			}
+			
+			protected function killToasterForgotPassListener(e:TimerEvent):void
+			{
+				customToaster1.removeEventListener(MouseEvent.CLICK, forgotPassToastClickHandler);
+				trace('killing toast forgot listener');
+				
+			}
+			
+			protected function getBureauDetailsResult2_resultHandler(event:ResultEvent):void
+			{
+				bureau_Details = getBureauDetailsResult2.lastResult as Bureau_Details;
+				profile_bureau.text = bureau_Details.bureaus_name;
+				profile_premises.text = bureau_Details.premises;
+				profile_city.text = bureau_Details.city;
+				profile_mobile.text = bureau_Details.cellphone;
+				profile_officephone.text = bureau_Details.officephone;
+				profile_email.text = bureau_Details.email;
+				profile_street.text = bureau_Details.street;
+			}
+			
+			
+			protected function bids_dg_creationCompleteHandler(event:FlexEvent):void
+			{
+				getBidsResult.token = ratesService.getBids(auth_data.token);
+			}
+			
+			protected function offers_dg_creationCompleteHandler(event:FlexEvent):void
+			{
+				getOffersResult.token = ratesService.getOffers(auth_data.token);
+			}
+			
+			protected function my_offers_btn_clickHandler(event:MouseEvent):void
+			{
+				currentState="Offers";
+				if(getOffersResult.token){
+					getOffersResult.token = ratesService.getOffers(auth_data.token);
+				}
+			}
+			
+			protected function my_bids_btn_clickHandler(event:MouseEvent):void
+			{
+				currentState="Sell_Bids";
+				if(getBidsResult.token){
+					getBidsResult.token = ratesService.getBids(auth_data.token);
+				}
+			}
+
+
+			protected function my_auctions_btn_clickHandler(event:MouseEvent):void
+			{
+				currentState="My_Auctions";
+				if(getMyAuctionsResult2.token){
+					getMyAuctionsResult2.token = ratesService.getMyAuctions(auth_data.token);
+				}
+				
+			}
+			
+			protected function my_sales_btn_clickHandler(event:MouseEvent):void
+			{
+				currentState="Sell_Sales";
+				if(getMySalesResult.token){
+					getMySalesResult.token = ratesService.getMySales(auth_data.token);
+				}
+			}
+			
+			protected function auction_offers_dg_creationCompleteHandler(event:FlexEvent):void
+			{
+				getAuctionOffersResult.token = ratesService.getAuctionOffers(my_auction_selected.auctions_id);
+			}
+			
+			protected function sale_bids_dg_creationCompleteHandler(event:FlexEvent):void
+			{
+				getSaleBidsResult.token = ratesService.getSaleBids(my_sale_selected.auctions_id);
+			}
+			
+			protected function getAuctionBidsResult_resultHandler(event:ResultEvent):void
+			{
+				auction_bids = getAuctionBidsResult.lastResult[0] as Latest_Bid;
+			}
+			
+			
+			protected function my_auctions_dg_creationCompleteHandler(event:FlexEvent):void
+			{
+				getMyAuctionsResult2.token = ratesService.getMyAuctions(auth_data.token);
+			}
+			
+			protected function my_sales_dg_creationCompleteHandler(event:FlexEvent):void
+			{
+				getMySalesResult.token = ratesService.getMySales(auth_data.token);
+			}
+			
+			protected function my_auctions_dg_selectionChangeHandler(event:GridSelectionEvent):void
+			{
+				currentState="My_Auction_Details";
+				my_auction_selected = my_auctions;
+				if(getAuctionOffersResult.token){
+					getAuctionOffersResult.token = ratesService.getAuctionOffers(my_auction_selected.auctions_id);
+				}
+				//@todo test this line below see if its better than the if above (doubt)
+				//getAuctionOffersResult.token = ratesService.getAuctionBids(my_auction_selected.auctions_id);
+				
+				//auction_bid_detail_selected = auction_bids2;
+				//auction_offers_dg.dataProvider = getAuctionBidsResult2.lastResult;
+				
+			}
+			
+			protected function my_sales_dg_selectionChangeHandler(event:GridSelectionEvent):void
+			{
+				currentState="Sell_Sales_Bids";
+				my_sale_selected = my_sales;
+
+				if(getSaleBidsResult.token){
+					getSaleBidsResult.token = ratesService.getSaleBids(my_sale_selected.auctions_id);
+				}
+			}
+			
+			protected function min_rate_txtBS_focusInHandler(event:FocusEvent):void
+			{
+				pockets.b2s=1;
+			}
+			
+			protected function min_rate_focusInHandler(event:FocusEvent):void
+			{
+				//trace(ObjectUtil.toString(pockets));
+				pockets.s2b=1;
+			}
+			
+			protected function min_rate_txt_focusOutHandler(event:FocusEvent):void
+			{
+				pockets.s2b=0;
+			}
+			
+			protected function min_rate_txtBS_focusOutHandler(event:FocusEvent):void
+			{
+				pockets.b2s=0;
+			}
+			
+			protected function windowedapplication1_activateHandler(event:Event):void
+			{ //@todo has a glitch wen u click its icon in taskbar to minimize.
+				pockets.window_focus=true;
+				//if(nativeWindow.displayState=="normal" && pockets.window_focus==false){
+				//	pockets.window_focus=false;
+				//} else {
+				//	pockets.window_focus=true;
+				//}
+				//trace(ObjectUtil.toString(nativeWindow.displayState));
+				//trace("Active focus "+pockets.window_focus);
+			}
+			
+			protected function windowedapplication1_deactivateHandler(event:Event):void
+			{
+				pockets.window_focus=false;
+				
+				//trace(ObjectUtil.toString(nativeWindow.displayState));
+				//trace("Deactivated:"+pockets.window_focus);
+			}
+			
+			protected function update_btn_clickHandler(event:MouseEvent):void
+			{
+				//var latest_version:Number = 
+				navigateToURL(new URLRequest("https://inforexafrica.com/download/?file=Inforex"+pockets.latest_version));
+				customToaster2.removeEventListener(MouseEvent.CLICK, update_btn_clickHandler);
+			}
+			
+			private function checkAppVersion():String {
+				var appXml:XML = NativeApplication.nativeApplication.applicationDescriptor;
+				var ns:Namespace = appXml.namespace();
+				var appVersion:String = appXml.ns::versionNumber[0];
+				//trace(appVersion);
+				return appVersion;
+			}
+			
+			
+			protected function checkUpdates(e:TimerEvent):void
+			{
+				var app_version:String = this.checkAppVersion();
+				checkUpdatesResult.token = ratesService.checkUpdates(app_version);
+			}
+			
+			protected function checkUpdatesResult_resultHandler(event:ResultEvent):void
+			{
+				
+				if(checkUpdatesResult.lastResult){
+					var latest_version:Number = parseFloat(checkUpdatesResult.lastResult);
+					pockets.latest_version = latest_version;
+					var app_version:String = this.checkAppVersion();
+					if(parseInt(app_version) < latest_version){
+						update_btn.visible = true;
+						sendUbuntuMessage(ToasterPosition.CENTER_RIGHT, "Software update required", "update", true, 2);
+						customToaster2.addEventListener(MouseEvent.CLICK, update_btn_clickHandler);
+					}
+					
+				}
+				
+				trace(latest_version);
+				
+			}
+			
+			private function initBanner():void {
+				bannerHTML.htmlLoader.navigateInSystemBrowser = true;
+			}
+			
+			
+			protected function bannerHTML_clickHandler(event:MouseEvent):void
+			{
+				bannerHTML.htmlLoader.load(new URLRequest(pockets.banner_url));
+			}
+			
+			private function validateBuyCurrency():void
+			{
+				//var event:ValidationResultEvent = auction_amount_txt_validator.validate();
+				//save_auction_btn_clickHandler(event)
+				var validatorArr:Array = Validator.validateAll([auction_amount_txt_validator,buy_rate_txt_validator,buy_expiry_date_validator]);
+				
+				
+				if(validatorArr.length == 0){
+					//validate datetime has not passed
+					//create a date time from the controls. Tue Feb 1 2005 12:00:00 AM
+					var buyTime:String = buy_dateHour.textDisplay.text + ":" + buy_dateMinute.textDisplay.text + ":00 " + buy_am_pm.selectedItem;
+					var buyDateTime:String  = dateFormatterAuctions.format(buy_expiry_date.selectedDate) + " " + buyTime;
+					var buyDatedTime:Date = new Date(buyDateTime);
+					var timeNow:Date = new Date();
+					//trace(DateTimeFunc.dateDiff("n", timeNow, buyDatedTime));
+					if(DateTimeFunc.dateDiff("n", timeNow, buyDatedTime) > 5){
+						save_auction_btn_clickHandler(buyDateTime);
+						trace("BUY Auction submitted");
+					} else {
+						//trace(buyDateTime);
+						this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, "Select future date/time or check System time", "error", true);
+					}
+				}
+				//trace(ObjectUtil.toString(validatorArr.toString()));
+			}
+			
+			private function validateSellCurrency():void
+			{
+				var validatorArr:Array = Validator.validateAll([sell_amount_txt_validator,sell_rate_txt_validator,sell_expiry_date_validator]);
+				
+				
+				if(validatorArr.length == 0){
+					//validate datetime has not passed
+					//create a date time from the controls. Tue Feb 1 2005 12:00:00 AM
+					var sellTime:String = sell_dateHour.textDisplay.text + ":" + sell_dateMinute.textDisplay.text + ":00 " + sell_am_pm.selectedItem;
+					var sellDateTime:String  = dateFormatterAuctions.format(sell_expiry_date.selectedDate) + " " + sellTime;
+					var sellDatedTime:Date = new Date(sellDateTime);
+					var timeNow:Date = new Date();
+					if(DateTimeFunc.dateDiff("n", timeNow, sellDatedTime) > 5){
+						save_sale_btn_clickHandler(sellDateTime);
+						trace("Sell Auction submitted");
+					} else {
+						//trace(sellDateTime);
+						this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, "Select future date/time or check System time", "error", true);
+					}
+				}
+			}
+			
+			private function validateBuyOffer():void
+			{
+				//trace( parseFloat(latest_Bid.bids_offer) + " " + parseFloat(offer_txt.text) + " " + parseFloat(auction_selected.min_rate) + " " + latest_Bid.bids_offer);
+				
+				var validatorArr:Array = Validator.validateAll([offer_txt_validator, terms_validator]);
+				
+				if(validatorArr.length == 0 && offerTermsCheck.selected == true){
+					if(parseFloat(auction_selected.min_rate) < parseFloat(offer_txt.text)){
+						this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, "Your Offer exceeds the set limit", "error", true);
+					} else if(isNaN(parseFloat(latest_Bid.bids_offer))){
+						latest_Offer.bids_offer = offer_txt.text;
+						latest_Offer.bureaus_name = auth_data.token;
+						//latestBid.bureaus_id is actually carrying the auction id
+						latest_Offer.bureaus_id = auction_selected.auctions_id;
+						latest_Offer.bids_dated = offer_hours.selectedItem;
+						createOfferResult.token = ratesService.createOffer(latest_Offer);
+						offer_txt.text = "";
+						//trace(ObjectUtil.toString(latest_Offer));
+						//currentState="Auction";
+						
+						//trace(ObjectUtil.toString(latest_Offer));
+					} else {
+						if(parseFloat(latest_Offer.bids_offer) < parseFloat(offer_txt.text)){
+							this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, "Your Offer exceeds the set limit", "error", true);
+						} else {
+							latest_Offer.bids_offer = offer_txt.text;
+							latest_Offer.bureaus_name = auth_data.token;
+							//latestBid.bureaus_id is actually carrying the auction id
+							latest_Offer.bureaus_id = auction_selected.auctions_id;
+							latest_Offer.bids_dated = offer_hours.selectedItem; 
+							createOfferResult.token = ratesService.createOffer(latest_Offer);
+							offer_txt.text = "";
+							//trace(ObjectUtil.toString(latest_Offer));
+						}
+					}
+				}
+			}
+			
+			private function validateSellBid():void
+			{
+				var validatorArr:Array = Validator.validateAll([bid_txt_validator, bid_terms_validator]);
+				
+				if(validatorArr.length == 0 && bidTermsCheck.selected == true){
+					if(parseFloat(sale_selected.min_rate) > parseFloat(bid_txt.text)){
+						this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, "Your Bid is lower than the set limit", "error", true);
+					} else if(isNaN(parseFloat(latest_Bid.bids_offer))){
+						latest_Bid.bids_offer = bid_txt.text;
+						latest_Bid.bureaus_name = auth_data.token;
+						//latestBid.bureaus_id is actually carrying the auction id
+						latest_Bid.bureaus_id = sale_selected.auctions_id;
+						latest_Bid.bids_dated = bid_hours.selectedItem;
+						createBidResult.token = ratesService.createBid(latest_Bid);
+						bid_txt.text = "";
+					} else {
+						if(parseFloat(latest_Bid.bids_offer) > parseFloat(bid_txt.text)){
+							this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, "Your Bid is lower than the set limit", "error", true);
+						} else {
+							latest_Bid.bids_offer = bid_txt.text;
+							latest_Bid.bureaus_name = auth_data.token;
+							//latestBid.bureaus_id is actually carrying the auction id
+							latest_Bid.bureaus_id = sale_selected.auctions_id;
+							latest_Bid.bids_dated = bid_hours.selectedItem; 
+							createBidResult.token = ratesService.createBid(latest_Bid);
+							bid_txt.text = "";
+						}
+					}
+				}
+			}
+			
+			protected function forgot_pass_clickHandler(event:MouseEvent):void
+			{
+				this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, "Contact us at www.inforexafrica.com", "updates", true);
+				customToaster1.addEventListener(MouseEvent.CLICK, forgotPassToastClickHandler);
+				//timer_listener.addEventListener(TimerEvent.TIMER, killToasterForgotPassListener);
+				//timer_listener.start();
+				//trace("bottom:"+customToaster1.bottom);
+				
+				//trace("bottom2:"+customToaster1.bottom);
+			}
+			
+			protected function forgotPassToastClickHandler(e:MouseEvent):void
+			{
+				//trace('clicked ');
+				navigateToURL(new URLRequest("http://www.inforexafrica.com/contact.php"));
+//				trace(customToaster1.hasEventListener(MouseEvent.CLICK));
+				customToaster1.removeEventListener(MouseEvent.CLICK, forgotPassToastClickHandler);
+//				trace(customToaster1.hasEventListener(MouseEvent.CLICK));
+			}
+			
+			protected function terms_clickHandler(event:MouseEvent):void
+			{
+				navigateToURL(new URLRequest("http://www.inforexafrica.com/terms.php"));
+			}
+			
+			protected function close_request_btn_clickHandler(event:MouseEvent):void
+			{
+				var close_auction:Object = new Object();
+				close_auction.bureaus_token = auth_data.token; 
+				close_auction.auction_id = my_auction_selected.auctions_id;
+				closeAuctionResult.token = ratesService.closeAuction(close_auction);
+				currentState = "Auction_Complete";
+			}
+			
+			protected function close_sale_btn_clickHandler(event:MouseEvent):void
+			{
+				var close_sale:Object = new Object();
+				close_sale.bureaus_token = auth_data.token; 
+				close_sale.auction_id = my_sale_selected.auctions_id;
+				closeSaleResult.token = ratesService.closeSale(close_sale);
+				currentState = "Sell_Complete";
+			}
+			
+			protected function getAuctionOffersResult_resultHandler(event:ResultEvent):void
+			{
+				refresh_offers.enabled = false;
+				auction_bids2 = getAuctionOffersResult.lastResult[0] as Auction_Bids;
+				//trace(ObjectUtil.toString(my_auction_selected));
+				//trace(ObjectUtil.toString(auction_bids2));
+				if(my_auction_selected.status == "Cancelled" || my_auction_selected.status == "Expired" || my_auction_selected.status == "Closed"){
+					//trace(1);
+					cancel_auction_btn.enabled=false;
+					close_request_btn.enabled=false;
+				} else {
+					//trace(2);
+					if(auction_bids2.bureaus_id == "0" && auction_bids2.auctions_id == "0" || auction_bids2.bids_status == "Expired"){
+						close_request_btn.enabled=false;
+						cancel_auction_btn.enabled=true;
+					} else {
+						cancel_auction_btn.enabled=false;
+						close_request_btn.enabled=true;
+					}
+				}
+				
+				if(getAuctionOffersResult.lastResult[0] != null && my_auction_selected.status == "Open"){
+					refresh_offers.enabled = true;
+					refresh_offers.label = "Refresh";
+				}
+				
+				
+//				if(auction_bids2.bureaus_id == 0 && my_auctions.status == "Open"){
+//					close_request_btn.enabled=false;
+//				}
+			}
+			
+			protected function getActiveAuctionsResult_faultHandler(event:FaultEvent):void
+			{
+				if(auction_dg){
+					no_auction_label1.visible = true;
+					no_auction_label2.visible = true;
+					auction_dg.enabled = false;
+				}
+				
+			}
+			
+			protected function getActiveAuctionsResult_resultHandler(event:ResultEvent):void
+			{
+				if(auction_dg){
+					no_auction_label1.visible = false;
+					no_auction_label2.visible = false;
+					auction_dg.enabled = true;
+				}
+				auctions = getActiveAuctionsResult.lastResult[0] as Auctions;
+				//prevent showing new auction notif for same auction.
+				if(pockets.latestAuction !== auctions.auctions_id){
+					pockets.latestAuction = auctions.auctions_id;
+					this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, "New Request available", "auction", true);
+					//create and remove click listener within 10s
+					customToaster1.addEventListener(MouseEvent.CLICK, auction_room_btn_clickHandler);
+//					timer_listener.addEventListener(TimerEvent.TIMER, killToasterAuctionNewListener);
+//					timer_listener.start();
+				}
+			}
+			
+			
+			protected function sell_dg_creationCompleteHandler(event:FlexEvent):void
+			{ //get notifications
+				getActiveSalesResult.token = ratesService.getActiveSales();
+			}
+			
+			protected function notifications_dg_creationCompleteHandler(event:FlexEvent):void
+			{ //get notifications
+				getNotificationsResult.token = ratesService.getNotifications(auth_data.token);
+			}
+			
+			protected function notifications_dg_selectionChangeHandler(event:GridSelectionEvent):void
+			{
+				currentState="Notifications";
+				notification_selected = notification;
+//				trace(ObjectUtil.toString(inbox_selected));
+//				msg_bureaus_name.text = inbox.bureaus_name;
+				msg_datedDateField.text = "Sent on " + dateFormatter.format(notification_selected.dated);
+				notification_msg.htmlText = notification_selected.message;
+				pockets.notification_selectedIndex = notifications_dg.selectedIndex;
+				
+				//mark message as read
+				if(notification_selected.msg_status == "Unread"){
+					var msg_details:Object = { token: auth_data.token, msg_id: notification_selected.msg_id };
+					readMsgResult.token = ratesService.readMsg(msg_details);
+				}
+			}
+			
+			protected function getNotificationsResult_resultHandler(event:ResultEvent):void
+			{
+				if(getNotificationsResult.lastResult != null){
+					notification = getNotificationsResult.lastResult[0] as Inbox;
+					//trace(ObjectUtil.toString(notification));
+					if(notification.msg_status == "Unread"){
+						notifications_tab.icon = newNotificationIcon;
+						//trace('notification lbl new');
+						if(notification.msg_id != notification_idTracker){
+							audioChannel = notifSound.play(0,2);
+							this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, "New notification", "notification_msg", true);
+							customToaster1.addEventListener(MouseEvent.CLICK, showNotifications);
+							//wait 10seconds and remove the listener to kill unclicked listeners
+							
+							if(notification.msg_type == 3) {
+								//Auction winner, time to party
+								winnerChannel = winnerSound.play(0,1);
+								this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, "You have won", "winner", true);
+							}
+						}
+						
+					} else {
+						notifications_tab.icon = notificationIcon;
+						//trace('notif lbl READ');
+					}
+					
+					notification_idTracker = notification.msg_id;
+				}
+			}
+			
+			protected function showInbox(e:MouseEvent):void
+			{
+				trace('clickedInbox');
+				currentState = "Message_Deleted";
+				main_tabnav.selectedIndex = main_tabnav.getChildIndex(main_tabnav.getChildByName('messages_tab'));
+				//delaying to ask for inner tab to allow it be created first
+				var timer:Timer = new Timer(2000, 1);
+				timer.addEventListener(TimerEvent.TIMER, showInboxTab);
+				timer.start();
+				
+				customToaster1.removeEventListener(MouseEvent.CLICK, showInbox);
+			}
+			
+			protected function showNotifications(e:MouseEvent):void
+			{
+				trace('clickedNotification');
+				currentState = "Message_Deleted";
+				main_tabnav.selectedIndex = main_tabnav.getChildIndex(main_tabnav.getChildByName('notifications_tab'));
+				//delaying to ask for inner tab to allow it be created first
+//				var timer:Timer = new Timer(2000, 1);
+//				timer.addEventListener(TimerEvent.TIMER, showNotificationsTab);
+//				timer.start();
+//				
+				customToaster1.removeEventListener(MouseEvent.CLICK, showNotifications);
+			}
+			
+//			protected function showNotificationsTab(e:TimerEvent):void
+//			{
+//				notifications_tab.selectedIndex = messages_tabnav.getChildIndex(messages_tabnav.getChildByName('notifications_tab'));
+//				trace('done showing notif');
+//			}
+			
+			protected function showInboxTab(e:TimerEvent):void
+			{
+				messages_tabnav.selectedIndex = messages_tabnav.getChildIndex(messages_tabnav.getChildByName('inbox_tab'));
+				trace('done showing inbox');
+			}
+			
+			protected function createBidResult_resultHandler(event:ResultEvent):void
+			{
+				if(event.result != null){
+					this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, "Your Bid has been submitted", "success", true);
+					currentState = "Sell";
+				}
+			}
+			
+			
+			protected function getAnnouncements():void
+			{
+				getAnnouncementsResult.token = ratesService.getAnnouncements();
+			}
+			
+			protected function messages_tabnav_creationCompleteHandler(event:FlexEvent):void
+			{
+				for( var i:int = 0 ; i< messages_tabnav.numChildren ; i++)
+				{
+					//messages_tabnav.getTabAt(i).setStyle("chromeColor", ( messages_tabnav.getChildAt(i) as NavigatorContent).getStyle("backgroundColor"));
+				}
+			}
+			
+			protected function updateProfileResult_resultHandler(event:ResultEvent):void
+			{
+				if(event.result){
+					old_pass.text = "";
+					new_pass1.text = '';
+					new_pass2.text = '';
+					this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, "Changes saved", "success", true);
+				}
+			}
+			
+			protected function refresh_offers_clickHandler(event:MouseEvent):void
+			{
+				getAuctionOffersResult.token = ratesService.getAuctionOffers(my_auction_selected.auctions_id);
+				refresh_offers.enabled = false;
+				refresh_offers.label = "Refreshing...";
+			}
+			
+			protected function refresh_bids_clickHandler(event:MouseEvent):void
+			{
+				getSaleBidsResult.token = ratesService.getSaleBids(my_sale_selected.auctions_id);
+				refresh_bids.enabled = false;
+				refresh_bids.label = "Refreshing...";
+			}
+			
+			protected function sell_dg_selectionChangeHandler(event:Object):void
+			{
+				currentState="Sell_Details";
+				if(sales.bureaus_id == auth_data.bureaus_id){
+					place_bid_btn.enabled=false;
+					sell_msg_btn.enabled=false;
+				} else {
+					place_bid_btn.enabled=true;
+					sell_msg_btn.enabled=true;
+				}
+				//save it to another variable since it can change when data refreshes
+				sale_selected = sales;
+				
+				sellDetailsHeading.label = "Sale #" + sale_selected.order_id.toString();
+				sell_bureaus_nameLabel.text = sale_selected.bureaus_name;
+				sell_officephoneLabel.text = sale_selected.officephone;
+				sell_cellphoneLabel.text = sale_selected.cellphone;
+				sell_emailLabel.text = sale_selected.email as String;
+				sell_premisesLabel.text = sale_selected.premises;
+				sell_streetLabel.text = sale_selected.street as String;
+				sell_cityLabel.text = sale_selected.city;
+			}
+			
+			protected function createSaleResult_resultHandler(event:ResultEvent):void
+			{
+				this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, "Sale submitted", "success", true);
+				currentState = "Sell";
+			}
+			
+			protected function getActiveSalesResult_resultHandler(event:ResultEvent):void
+			{
+				sales = getActiveSalesResult.lastResult[0] as Auctions;
+				if(sell_dg && sales != null){
+					no_sale_label1.visible = false;
+					no_sale_label2.visible = false;
+					sell_dg.enabled = true;
+				}
+				
+				//prevent showing new auction notif for same auction.
+				if(pockets.latestSale !== sales.auctions_id){
+					pockets.latestSale = sales.auctions_id;
+					this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, "New Sale available", "auction", true);
+					//create and remove click listener within 10s
+					customToaster1.addEventListener(MouseEvent.CLICK, sell_room_btn_clickHandler);
+				}
+			}
+			
+			protected function getActiveSalesResult_faultHandler(event:FaultEvent):void
+			{
+				if(sell_dg){
+					no_sale_label1.visible = true;
+					no_sale_label2.visible = true;
+					sell_dg.enabled = false;
+				}
+			}
+			
+			
+			protected function getLatestOfferResult_resultHandler(event:ResultEvent):void
+			{
+				latest_Offer = getLatestOfferResult.lastResult as Latest_Bid;
+				if(latest_Offer.bureaus_name != null){
+					latest_offer_dated.text = "At: " + msgDateFormatter.format(latest_Offer.bids_dated);;
+				}
+			}
+			
+			
+			
+			protected function createOfferResult_resultHandler(event:ResultEvent):void
+			{
+				if(event.result != null){
+					this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, "Your offer has been submitted", "success", true);
+					currentState = "Auction";
+				}
+			}
+			
+			protected function cancelSaleResult_resultHandler(event:ResultEvent):void
+			{
+				if(event.result != null){
+					this.sendUbuntuMessage(ToasterPosition.BOTTOM_RIGHT, "Sale cancelled", "error", true);
+					currentState = "Sell";
+				}
+			}
+			
+			protected function getSaleBidsResult_resultHandler(event:ResultEvent):void
+			{
+				refresh_bids.enabled = false;
+				sale_bids = getSaleBidsResult.lastResult[0] as Auction_Bids;
+				
+				if(my_sale_selected.status == "Cancelled" || my_sale_selected.status == "Expired" || my_sale_selected.status == "Closed"){
+					//trace(1);
+					cancel_sale_btn.enabled=false;
+					close_sale_btn.enabled=false;
+				} else {
+					//trace(ObjectUtil.toString(sale_bids));
+					if(sale_bids.bureaus_id == "0" && sale_bids.auctions_id == "0" || sale_bids.bids_status == "Expired"){
+						close_sale_btn.enabled=false;
+						cancel_sale_btn.enabled=true;
+					} else {
+						cancel_sale_btn.enabled=false;
+						close_sale_btn.enabled=true;
+					}
+				}
+				
+				if(getSaleBidsResult.lastResult[0] != null && my_sale_selected.status == "Open"){
+					refresh_bids.enabled = true;
+					refresh_bids.label = "Refresh";
+				}
+			}
+			
+		]]>
+		
+	</fx:Script>
+	<s:states>
+		<s:State name="Login"/>
+		<s:State name="Local_Rates"/>
+		<s:State name="Profile"/>
+		<s:State name="Auction"/>
+		<s:State name="Auction_New"/>
+		<s:State name="Offers"/>
+		<s:State name="My_Auctions"/>
+		<s:State name="My_Auction_Details"/>
+		<s:State name="Auction_Details"/>
+		<s:State name="Auction_Offer"/>
+		<s:State name="International_Rates"/>
+		<s:State name="Messages"/>
+		<s:State name="Messages_Sent"/>
+		<s:State name="Auction_Message"/>
+		<s:State name="Message_Deleted"/>
+		<s:State name="Messages_Reply"/>
+		<s:State name="Local_Rates_Details"/>
+		
+		
+		<s:State name="Auction_Complete"/>
+		<s:State name="Notifications"/>
+		<s:State name="Sell"/>
+		<s:State name="Sell_New"/>
+		<s:State name="Sell_Bids"/>
+		<s:State name="Sell_Sales_Bids"/>
+		<s:State name="Sell_Details"/>
+		<s:State name="Sell_Bid"/>
+		<s:State name="Sell_Sales"/>
+		<s:State name="Sell_Complete"/>
+	</s:states>
+	
+	<fx:Declarations>		
+		<ratesservice:RatesService id="ratesService" 
+								   fault="errorHandler(event)"
+								   showBusyCursor="true"/>
+		<s:CallResponder id="getAllRatesResult" result="getAllRatesResult_resultHandler()"/>
+		
+		<s:CallResponder id="getMyRates2Result2" result="test_Rates_dt = getMyRates2Result2.lastResult[0] as Test_Rates_dt"/>
+		<valueObjects:Test_Rates_dt id="test_Rates_dt"/>
+		<valueObjects:MyRates id="my_Rates"/>
+		
+		<s:CallResponder id="getMyRatesResult" result="getMyRatesResult_resultHandler(event)"/>
+		<s:CallResponder id="userAuthResult" result="userAuthResult_resultHandler(event)"/>
+		<s:CallResponder id="getActiveAuctionsResult" fault="getActiveAuctionsResult_faultHandler(event)"
+						 result="getActiveAuctionsResult_resultHandler(event)"/>
+		<valueObjects:Auctions id="auctions"/>
+		<valueObjects:My_Auctions id="my_auctions" />
+		<valueObjects:My_Auctions id="my_sales" />
+		<valueObjects:Auctions id="sales"/>
+		<valueObjects:Auth_Data id="auth_data"/>
+		<s:CallResponder id="getLatestBidResult"
+						 result="getLatestBidResult_resultHandler(event)"/>
+		<valueObjects:Latest_Bid id="latest_Offer"/>
+		<valueObjects:Latest_Bid id="latest_Bid"/>
+		<valueObjects:Latest_Bid id="auction_bids"/>
+		<valueObjects:Auction_Bids id="auction_bids2"/>
+		<valueObjects:Auction_Bids id="sale_bids"/>
+		<valueObjects:Currencies id="all_currencies"/>
+		<valueObjects:Inbox id="inbox"/>
+		<valueObjects:Inbox id="inbox2"/>
+		<valueObjects:Inbox id="notification"/>
+		<valueObjects:Bureau_Details id="bureau_Details"/>
+		<s:CallResponder id="createBidResult" result="createBidResult_resultHandler(event)"/>
+		<s:CallResponder id="getInboxResult" result="getInboxResult_resultHandler(event)"/>
+		<s:CallResponder id="getSentResult"/>
+		<s:CallResponder id="composeMsgResult" result="composeMsgResult_resultHandler(event)"/>
+		<s:CallResponder id="createAuctionResult" result="createAuctionResult_resultHandler(event)"/>
+		<s:CallResponder id="getCurrenciesResult" result="getCurrenciesResult_resultHandler(event)"/>
+		<s:CallResponder id="cancelAuctionResult" result="cancelAuctionResult_resultHandler(event)"/>
+		<s:CallResponder id="getBureausResult"/>
+		<s:DateTimeFormatter id="dateFormatter" dateTimePattern="dd MMMM yyyy h:mm a"/>
+		<s:DateTimeFormatter id="dateFormatterAuctions" dateTimePattern="EEE MMM d yyyy"/>
+		<s:DateTimeFormatter id="msgDateFormatter" dateTimePattern="dd/MMM h:mm a"/>
+		<s:NumberFormatter id="moneyFormatter" fractionalDigits="2" leadingZero="true" />
+		<s:CallResponder id="deleteMsgResult" result="deleteMsgResult_resultHandler(event)"/>
+		<s:CallResponder id="deleteSentMsgResult" result="deleteSentMsgResult_resultHandler(event)"/>
+		<s:CallResponder id="readMsgResult"/>
+		<s:CallResponder id="getBureauDetailsResult" result="getBureauDetailsResult_resultHandler(event)"/>
+		<s:CallResponder id="updateProfileResult" result="updateProfileResult_resultHandler(event)"/>
+		<s:CallResponder id="updateProfileResult2"/>
+		<s:CallResponder id="getBureauDetailsResult2" result="getBureauDetailsResult2_resultHandler(event)"/>
+		<s:CallResponder id="getBidsResult"/>
+		<s:CallResponder id="getAuctionBidsResult" result="getAuctionBidsResult_resultHandler(event)"/>
+		<s:CallResponder id="getMyAuctionsResult2" result="my_auctions = getMyAuctionsResult2.lastResult[0] as My_Auctions"/>
+		<s:CallResponder id="getAuctionOffersResult" result="getAuctionOffersResult_resultHandler(event)"/>
+		<s:CallResponder id="checkUpdatesResult" result="checkUpdatesResult_resultHandler(event)"/>
+		<s:CallResponder id="getCurrenciesResult2"/>
+		<s:NumberValidator id="offer_txt_validator"
+						   source="{offer_txt}"
+						   triggerEvent=""
+						   property="text" 
+						   requiredFieldError="Your Offer is required"/>
+		<s:NumberValidator id="bid_txt_validator"
+						   source="{bid_txt}"
+						   triggerEvent=""
+						   property="text" 
+						   requiredFieldError="Your bid is required"/>
+		<mx:StringValidator id="terms_validator"
+							maxLength="4"
+					  required="true"
+					  source="{offerTermsCheck}"
+					  requiredFieldError="You must agree to Terms and Conditions."
+					  tooLongError="You must agree to Terms and Conditions."
+					  property="selected"/>
+		<mx:StringValidator id="bid_terms_validator"
+							maxLength="4"
+							required="true"
+							source="{bidTermsCheck}"
+							requiredFieldError="You must agree to Terms and Conditions."
+							tooLongError="You must agree to Terms and Conditions."
+							property="selected"/>
+		<s:NumberValidator id="auction_amount_txt_validator"
+						   source="{auction_amount_txt}"
+						   triggerEvent=""
+						   property="text" 
+						   requiredFieldError="Amount is required"
+						   />
+		<s:NumberValidator id="sell_amount_txt_validator"
+						   source="{sell_amount_txt}"
+						   triggerEvent=""
+						   property="text"
+						   requiredFieldError="Amount is required"
+						   />
+		<s:NumberValidator id="buy_rate_txt_validator"
+						   source="{buy_rate_txt}"
+						   triggerEvent=""
+						   required="true"
+						   requiredFieldError="Exchange rate required"
+						   property="text"/>
+		<s:NumberValidator id="sell_rate_txt_validator"
+						   source="{sell_rate_txt}"
+						   triggerEvent=""
+						   required="true"
+						   requiredFieldError="Exchange rate required"
+						   property="text"/>
+		<mx:Validator id="buy_expiry_date_validator"
+					  required="true"
+					  source="{buy_expiry_date}"
+					  triggerEvent=""
+					  requiredFieldError="Expiry date required"
+					  property="text"/>
+		<mx:Validator id="sell_expiry_date_validator"
+					  required="true"
+					  source="{sell_expiry_date}"
+					  triggerEvent=""
+					  requiredFieldError="Expiry date required"
+					  property="text"/>
+		<s:CallResponder id="closeAuctionResult"/>
+		<s:CallResponder id="getNotificationsResult" result="getNotificationsResult_resultHandler(event)"/>
+		<s:CallResponder id="getAnnouncementsResult"/>
+		<s:CallResponder id="getActiveSalesResult" result="getActiveSalesResult_resultHandler(event)"
+						 fault="getActiveSalesResult_faultHandler(event)"/>
+		<s:CallResponder id="createSaleResult" result="createSaleResult_resultHandler(event)"/>
+		<s:CallResponder id="getLatestOfferResult" result="getLatestOfferResult_resultHandler(event)"/>
+		<s:CallResponder id="createOfferResult" result="createOfferResult_resultHandler(event)"/>
+		<s:CallResponder id="getOffersResult"/>
+		<s:CallResponder id="getMySalesResult" result="my_sales = getMySalesResult.lastResult[0] as My_Auctions"/>
+		<s:CallResponder id="getSaleBidsResult" result="getSaleBidsResult_resultHandler(event)"/>
+		<s:CallResponder id="cancelSaleResult" result="cancelSaleResult_resultHandler(event)"/>
+		<s:CallResponder id="closeSaleResult"/>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Binding source="my_sales_dg.selectedItem as My_Auctions" destination="my_sales"/>
+	<fx:Binding source="my_auctions_dg.selectedItem as My_Auctions" destination="my_auctions"/>
+	<fx:Binding source="my_rates_grid.selectedItem as MyRates" destination="my_Rates"/>
+	<fx:Binding source="auction_dg.selectedItem as Auctions" destination="auctions" />
+	<fx:Binding source="sell_dg.selectedItem as Auctions" destination="sales" />
+	<fx:Binding source="notifications_dg.selectedItem as Inbox" destination="notification" />
+	<fx:Binding source="inbox_dg.selectedItem as Inbox" destination="inbox" />
+	<fx:Binding source="sent_dg.selectedItem as Inbox" destination="inbox2" />
+	
+	<mx:HTML id="bannerHTML" initialize="initBanner()" excludeFrom="Login" y="0" right="1" width="394" height="80" location="{pockets.banner_url}" 
+			 click="bannerHTML_clickHandler(event)" />
+	<mx:MenuBar id="menu_bar"
+				includeIn="Auction,Auction_Complete,Auction_Details,Auction_Message,Auction_New,Auction_Offer,International_Rates,Local_Rates,Local_Rates_Details,Message_Deleted,Messages,Messages_Reply,Messages_Sent,My_Auction_Details,My_Auctions,Notifications,Offers,Profile,Sell,Sell_Bid,Sell_Bids,Sell_Complete,Sell_Details,Sell_New,Sell_Sales,Sell_Sales_Bids"
+				x="0" top="80" width="100%" height="49" chromeColor="#4C4C4C"
+				></mx:MenuBar>
+	<s:Button id="local_rate_btn"
+			  includeIn="Auction,Auction_Complete,Auction_Details,Auction_Message,Auction_New,Auction_Offer,International_Rates,Local_Rates,Local_Rates_Details,Message_Deleted,Messages,Messages_Reply,Messages_Sent,My_Auction_Details,My_Auctions,Notifications,Offers,Profile,Sell,Sell_Bid,Sell_Bids,Sell_Complete,Sell_Details,Sell_New,Sell_Sales,Sell_Sales_Bids"
+			  height="35" label="Local Rates"
+			  click="local_rate_btn_clickHandler(event)" styleName="nav"
+			  x="353" top="88" enabled.Local_Rates="false"
+			  icon="{localIcon}"
+			  enabled.Local_Rates_Details="false"/>
+	<s:Button id="buy_room_btn"
+			  includeIn="Auction,Auction_Complete,Auction_Details,Auction_Message,Auction_New,Auction_Offer,International_Rates,Local_Rates,Local_Rates_Details,Message_Deleted,Messages,Messages_Reply,Messages_Sent,My_Auction_Details,My_Auctions,Notifications,Offers,Profile,Sell,Sell_Bid,Sell_Bids,Sell_Complete,Sell_Details,Sell_New,Sell_Sales,Sell_Sales_Bids"
+			  x="480" top="88" height="35" label="Buy" chromeColor="#7bb6de"
+			  click="auction_room_btn_clickHandler(event)" icon="{buyIcon}"
+			  skinClass="customSkins.coloredBtnIcon" styleName="nav"
+			  enabled.Auction="false"/>
+	<s:Button id="sell_room_btn"
+			  includeIn="Auction,Auction_Complete,Auction_Details,Auction_Message,Auction_New,Auction_Offer,International_Rates,Local_Rates,Local_Rates_Details,Message_Deleted,Messages,Messages_Reply,Messages_Sent,My_Auction_Details,My_Auctions,Notifications,Offers,Profile,Sell,Sell_Bid,Sell_Bids,Sell_Complete,Sell_Details,Sell_New,Sell_Sales,Sell_Sales_Bids"
+			  x="558" top="88" height="35" label="Sell" chromeColor="#6FD23A"
+			  click="sell_btn_clickHandler(event)" focusColor="#A5FF8D" icon="{sellIcon}"
+			  skinClass="customSkins.coloredBtnIcon" styleName="nav"
+			  enabled.Sell="false"
+			  enabled.Sell_Bid="false"
+			  enabled.Sell_Complete="false"
+			  enabled.Sell_Details="false"/>
+	<s:Button id="international_rates_btn"
+			  includeIn="Auction,Auction_Complete,Auction_Details,Auction_Message,Auction_New,Auction_Offer,International_Rates,Local_Rates,Local_Rates_Details,Message_Deleted,Messages,Messages_Reply,Messages_Sent,My_Auction_Details,My_Auctions,Notifications,Offers,Profile,Sell,Sell_Bid,Sell_Bids,Sell_Complete,Sell_Details,Sell_New,Sell_Sales,Sell_Sales_Bids"
+			  x="636" top="88" height="35" label="International Rates"
+			  click="international_rates_btn_clickHandler(event)" icon="{globeIcon}" styleName="nav"
+			  enabled.International_Rates="false"/>
+	<s:Button id="profile_btn"
+			  includeIn="Auction,Auction_Complete,Auction_Details,Auction_Message,Auction_New,Auction_Offer,International_Rates,Local_Rates,Local_Rates_Details,Message_Deleted,Messages,Messages_Reply,Messages_Sent,My_Auction_Details,My_Auctions,Notifications,Offers,Profile,Sell,Sell_Bid,Sell_Bids,Sell_Complete,Sell_Details,Sell_New,Sell_Sales,Sell_Sales_Bids"
+			  x="809" top="88" height="35" label="Profile" click="profile_btn_clickHandler(event)"
+			  icon="{profileIcon}" styleName="nav"
+			  enabled.Profile="false"/>
+	
+	<s:Button id="update_btn" visible="false" top="88" right="80" height="35" label="Update Inforex"
+			  chromeColor="#26434A" click="update_btn_clickHandler(event)"
+			  color="#FFFFFF" fontWeight="bold" />
+	<s:SWFLoader id="online_indicator" visible="true" width="40" height="40"
+				 source="assets/online.swf" visible.Login="false"
+				 y="88" right="10" toolTip="System connected"/>
+	
+	<s:Panel includeIn="Profile" x="348" y="129" width="100%" height="100%" title="Edit your profile">
+		<s:Scroller x="0" y="0" height="100%" width="100%">
+			<s:Group x="0" y="0" height="100%"  >
+				<s:Form x="10" y="10" width="507" height="100%">
+					<s:FormItem label="Bureau name">
+						<s:TextInput id="profile_bureau" width="300" text="" enabled="false"/>
+					</s:FormItem>
+					<s:FormItem label="Change Password">
+						<s:BorderContainer width="300" borderColor="#D8D8D8" borderStyle="inset"
+										   cornerRadius="10">
+							<s:Form x="0" y="0">
+								<s:FormItem label="Old password">
+									<s:TextInput id="old_pass" displayAsPassword="true"
+												 width="250"/>
+								</s:FormItem>
+								<s:FormItem label="New password">
+									<s:TextInput id="new_pass1" displayAsPassword="true"
+												 width="250"/>
+								</s:FormItem>
+								<s:FormItem label="Re-type new password">
+									<s:TextInput id="new_pass2" displayAsPassword="true"
+												 width="250"/>
+								</s:FormItem>
+							</s:Form>
+						</s:BorderContainer>
+					</s:FormItem>
+					<s:FormItem label="Premises">
+						<s:TextInput id="profile_premises" width="300"
+									 text=""/>
+					</s:FormItem>
+					<s:FormItem label="Street">
+						<s:TextInput id="profile_street"/>
+					</s:FormItem>
+					<s:FormItem label="City">
+						<s:TextInput id="profile_city"/>
+					</s:FormItem>
+					<s:FormItem width="245" label="Phone 1">
+						<s:TextInput id="profile_officephone" width="300" text=""/>
+					</s:FormItem>
+					<s:FormItem label="Phone 2">
+						<s:TextInput id="profile_mobile" text="" width="300"/>
+					</s:FormItem>
+					<s:FormItem label="Email">
+						<s:TextInput id="profile_email" width="300" text=""/>
+					</s:FormItem>
+					<s:Form width="300">
+						<s:layout>
+							<s:VerticalLayout horizontalAlign="center" />
+						</s:layout>
+							<s:Button id="edit_profile_btn" label="Update" styleName="nav"
+									  click="edit_profile_btn_clickHandler(event)"/>
+					</s:Form>
+				</s:Form>
+			</s:Group>
+		</s:Scroller>
+	</s:Panel>
+	<s:Panel includeIn="Local_Rates,Local_Rates_Details" x="348" y="129" width="100%" height="100%"
+			 title="Local Rates">
+	<s:Scroller x="0" y="0" height="100%" width="100%" includeIn="Local_Rates,Local_Rates_Details">
+		<s:Group x="0" y="0" height="100%"  >
+			<mx:AdvancedDataGrid id="local_rates_dg" x="0" y="0" height="100%"
+								 creationComplete="local_rates_dg_creationCompleteHandler(event)"
+								 dataProvider="{getAllRatesResult.lastResult}"
+								 designViewDataType="flat"
+								 doubleClick="local_rates_dg_doubleClickHandler(event)"
+								 doubleClickEnabled="true"
+								 x.Local_Rates_Details="206" y.Local_Rates_Details="0">
+				
+				<mx:groupedColumns>
+					<mx:AdvancedDataGridColumn dataField="last_seen" headerText="Bureau" width="200"
+											   itemRenderer="components.BureausIndicatorIR"/>
+					<mx:AdvancedDataGridColumnGroup headerText="USD">
+						<mx:AdvancedDataGridColumn dataField="buy_USD" headerText="Buying" width="80"/>
+						<mx:AdvancedDataGridColumn dataField="sell_USD" headerText="Selling" width="80"/>
+					</mx:AdvancedDataGridColumnGroup>
+					<mx:AdvancedDataGridColumnGroup headerText="GBP">
+						<mx:AdvancedDataGridColumn dataField="buy_GBP" headerText="Buying" width="80"/>
+						<mx:AdvancedDataGridColumn dataField="sell_GBP" headerText="Selling" width="80"/>
+					</mx:AdvancedDataGridColumnGroup>
+					<mx:AdvancedDataGridColumnGroup headerText="EURO">
+						<mx:AdvancedDataGridColumn dataField="buy_EURO" headerText="Buying" width="80"/>
+						<mx:AdvancedDataGridColumn dataField="sell_EURO" headerText="Selling" width="80"/>
+					</mx:AdvancedDataGridColumnGroup>
+					<mx:AdvancedDataGridColumnGroup headerText="KSH">
+						<mx:AdvancedDataGridColumn dataField="buy_KSH" headerText="Buying" width="80"/>
+						<mx:AdvancedDataGridColumn dataField="sell_KSH" headerText="Selling" width="80"/>
+					</mx:AdvancedDataGridColumnGroup>
+					<mx:AdvancedDataGridColumnGroup headerText="TZ">
+						<mx:AdvancedDataGridColumn dataField="buy_TZ" headerText="Buying" width="80"/>
+						<mx:AdvancedDataGridColumn dataField="sell_TZ" headerText="Selling" width="80"/>
+					</mx:AdvancedDataGridColumnGroup>
+					<mx:AdvancedDataGridColumnGroup headerText="SDG">
+						<mx:AdvancedDataGridColumn dataField="buy_SDG" headerText="Buying" width="80"/>
+						<mx:AdvancedDataGridColumn dataField="sell_SDG" headerText="Selling" width="80"/>
+					</mx:AdvancedDataGridColumnGroup>
+					<mx:AdvancedDataGridColumnGroup headerText="ZAR">
+						<mx:AdvancedDataGridColumn dataField="buy_ZAR" headerText="Buying" width="80"/>
+						<mx:AdvancedDataGridColumn dataField="sell_ZAR" headerText="Selling" width="80"/>
+					</mx:AdvancedDataGridColumnGroup>
+					<mx:AdvancedDataGridColumnGroup headerText="RWF">
+						<mx:AdvancedDataGridColumn dataField="buy_RWF" headerText="Buying" width="80"/>
+						<mx:AdvancedDataGridColumn dataField="sell_RWF" headerText="Selling" width="80"/>
+					</mx:AdvancedDataGridColumnGroup>
+					<mx:AdvancedDataGridColumnGroup headerText="INR">
+						<mx:AdvancedDataGridColumn dataField="buy_INR" headerText="Buying" width="80"/>
+						<mx:AdvancedDataGridColumn dataField="sell_INR" headerText="Selling" width="80"/>
+					</mx:AdvancedDataGridColumnGroup>
+					<mx:AdvancedDataGridColumnGroup headerText="JPY">
+						<mx:AdvancedDataGridColumn dataField="buy_JPY" headerText="Buying" width="80"/>
+						<mx:AdvancedDataGridColumn dataField="sell_JPY" headerText="Selling" width="80"/>
+					</mx:AdvancedDataGridColumnGroup>
+					<mx:AdvancedDataGridColumnGroup headerText="CHF">
+						<mx:AdvancedDataGridColumn dataField="buy_CHF" headerText="Buying" width="80"/>
+						<mx:AdvancedDataGridColumn dataField="sell_CHF" headerText="Selling" width="80"/>
+					</mx:AdvancedDataGridColumnGroup>
+				</mx:groupedColumns>
+					
+			</mx:AdvancedDataGrid>
+			<s:Panel includeIn="Local_Rates_Details" x="0" y="0" width="207" height="100%"
+					 title="Bureau details">
+				<s:Button x="127" y="-26" label="&lt;&lt; Hide" id="hide_btn" click="hide_btn_clickHandler(event)"/>
+				<s:Scroller x="0" y="0" width="100%" height="100%">
+					<s:Group width="100%" height="100%">
+						<s:Form x="10" y="10">
+							<s:Label text="Name"/>
+								<s:Label id="bureaus_nameLabel2" text="{bureau_Details.bureaus_name}" paddingBottom="10"/>
+							<s:Label text="Office phone"/>
+								<s:Label id="officephoneLabel2" text="{bureau_Details.officephone}" paddingBottom="10"/>
+							<s:Label text="Mobile"/>
+								<s:Label id="cellphoneLabel2" text="{bureau_Details.cellphone}" paddingBottom="10"/>
+							<s:Label text="Premises"/>
+								<s:Label id="premisesLabel2" text="{bureau_Details.premises}" paddingBottom="10"/>
+							<s:Label text="Street"/>
+								<s:Label id="streetLabel2" text="{bureau_Details.street}" paddingBottom="10"/>
+							<s:Label text="Email"/>
+								<s:Label id="emailLabel2" text="{bureau_Details.email}" paddingBottom="10"/>
+							<s:Label text="City"/>
+								<s:Label id="cityLabel2" text="{bureau_Details.city}" paddingBottom="10"/>
+							<s:Label text="Rates last updated"/>
+							<s:Label id="rates_dated" text="{msgDateFormatter.format(bureau_Details.dated)}" paddingBottom="10"/>
+						</s:Form>
+					</s:Group>
+				</s:Scroller>
+			</s:Panel>
+		</s:Group>
+	</s:Scroller>
+	</s:Panel>
+	<s:BorderContainer id="login_mask" includeIn="Login" x="0" y="0" width="100%" height="100%"
+					   backgroundAlpha="0.8" backgroundColor="#000">
+		<s:Panel id="login_panel" width="246" height="262" cornerRadius="5" horizontalCenter="-35"
+				 title="Secure system access" verticalCenter="36">
+			<s:Image x="114" y="0" source="assets/login.png"/>
+			<s:Form x="20" y="-8" defaultButton="{login_btn}">
+				<s:FormItem label="Username" color="#333958" contentBackgroundColor="#F0F0F0">
+					<s:TextInput id="username_txt" height="30" borderColor="#ACACAC"
+								 chromeColor="#D7D7D7" color="#707070"
+								 contentBackgroundColor="#Ffffff" fontSize="13" paddingLeft="5"
+								 text=""/>
+				</s:FormItem>
+				<s:FormItem label="Password" color="#333958">
+					<s:TextInput id="password_txt" height="30" borderColor="#D7D7D7"
+								 contentBackgroundColor="#F0F0F0" displayAsPassword="true"
+								 paddingLeft="5"
+								 text="" fontSize="13"/>
+					<s:Button id="login_btn" height="35" label="Login"
+							  click="login_btn_clickHandler(event)" color="#707070" fontWeight="bold"
+							  styleName="nav"/>
+				</s:FormItem>
+			</s:Form>
+			
+			<s:Label id="forgot_pass" x="10" y="211" click="forgot_pass_clickHandler(event)"
+					 color="#15688F" text="» Forgot Password?"/>
+			
+			
+		</s:Panel>
+		<s:Label verticalCenter="176" color="#919191" text="Copyright © {today.getFullYear()} Inforex Ltd"
+				 horizontalCenter="-35"/>
+		
+	</s:BorderContainer>
+	<s:Image id="logo" excludeFrom="Login" left="10" top="3"
+			 source="{logoImg}"
+			 width="200"
+			 height="70"/>
+	<s:Image id="logo_login" left="284" top="163" source="{logoImg}"
+			 horizontalCenter="-109" verticalCenter="-115" includeIn="Login"/>
+	
+	<s:Panel includeIn="Auction_Details,Auction_New,Auction_Complete,Auction,My_Auctions,Auction_Offer,Auction_Message,My_Auction_Details,Offers"
+			 x="348" y="129" width="100%" height="100%" title="Active Requests"
+			 title.Auction="Active Requests"
+			 title.Auction_Complete="My Requests"
+			 title.Auction_New="New Request"
+			 title.Offers="My Offers"
+			 title.My_Auction_Details="My Request details"
+			 title.My_Auctions="My Requests">
+		<s:Button id="new_auction_btn" x="177" y="-30" 
+				  label="Buy Currency" chromeColor="#7bb6de"
+				  click="new_auction_btn_clickHandler(event)"
+				  enabled.Auction_New="false"
+				  skinClass="customSkins.coloredBtnIcon"
+				  icon="{requestAddIcon}"/>
+		<s:Button id="my_offers_btn" x="307" y="-30" label="My Offers" chromeColor="#7bb6de"
+				  click="my_offers_btn_clickHandler(event)" icon="{myOffersIcon}"
+				  toolTip="View Offers you have made"
+				  skinClass="customSkins.coloredBtnIcon"
+				  enabled.Offers="false"
+				  enabled.My_Auctions="true"/>
+		<s:Button id="my_auctions_btn" x="412" y="-30" label="My Requests" chromeColor="#7bb6de"
+				  click="my_auctions_btn_clickHandler(event)" icon="{myTransactionsIcon}"
+				  skinClass="customSkins.coloredBtnIcon"
+				  toolTip="Manage Requests you have made."
+				  enabled.My_Auction_Details="false"
+				  enabled.My_Auctions="false"/>
+		<s:Scroller x="0" y="0" width="100%" height="100%">
+		<s:Group width="100%" height="100%"
+				 color.Auction_Complete="#616161">
+			
+		<s:Label id="no_auction_label1" includeIn="Auction" x="157" y="123" color="#CFCFCF"
+				 fontFamily="Verdana" fontSize="30" text="No Active Requests"
+				 visible="false"/>
+		<s:Label id="no_auction_label2" includeIn="Auction" x="177" y="157" color="#909090"
+				 text="Buy Currency to create a new Request"
+				 visible="false"/>
+<!-- new Buying form -->
+		<s:Group includeIn="Auction_New" width="100%" height="100%">
+			<s:VGroup>
+				<s:Form x="0" y="-1" width="265" height="400">
+					<s:FormItem label="I am Buying" >
+						<s:DropDownList id="buy_currency_dlist" change="min_rate_txt_changeHandler()"
+										creationComplete="target_dlist_creationCompleteHandler(event)"
+										labelField="currency_abbr" prompt="Select" requireSelection="true">
+							<s:AsyncListView list="{getCurrenciesResult2.lastResult}"/>
+						</s:DropDownList>
+					</s:FormItem>
+					<s:FormItem label="Amount" required="true">
+						<s:TextInput id="auction_amount_txt" prompt="In buying currency" change="min_rate_txt_changeHandler()" />
+					</s:FormItem>
+					<s:FormItem label="Maximum Exchange rate">
+						<s:TextInput id="buy_rate_txt" change="min_rate_txt_changeHandler()"/>
+					</s:FormItem>
+					<s:FormItem label="Expiry date">
+						<mx:DateField id="buy_expiry_date" disabledRanges="{[{rangeEnd: new Date(today.getFullYear(),today.getMonth(),today.getDate() - 1)}]}"/>
+					</s:FormItem>
+					<mx:HRule width="264"/>
+					<s:Form id="form1">
+						<s:Button id="submit_buy_currency" width="100" height="35" label="Submit"
+								  click="validateBuyCurrency()" styleName="nav"/>
+					</s:Form>
+					
+				</s:Form>
+				
+				
+			</s:VGroup>
+			<s:Group left="265" top="20">
+				
+				<s:FormItem left="10" width="254"  label="Expiry time(Hrs:Mins)" styleName="unstacked">
+					
+				</s:FormItem>
+				<s:NumericStepper id="buy_dateHour" left="26" top="35" maximum="12" minimum="1"
+								  styleName="unstacked" value="{today.getHours() + 1}"
+								  valueFormatFunction="{leadingZero}"/>
+				<s:Label left="84" fontWeight="bold" text=":" top="40"/>
+				<s:NumericStepper id="buy_dateMinute"  left="91" maximum="59" top="35"
+								  minimum="0" value="{today.getMinutes()}"
+								  valueFormatFunction="{leadingZero}"/>
+				<s:DropDownList left="152" id="buy_am_pm" requireSelection="true" top="35">
+					<s:ArrayCollection>
+						<fx:String>AM</fx:String>
+						<fx:String>PM</fx:String>
+					</s:ArrayCollection>
+				</s:DropDownList>
+			</s:Group>
+			<s:Label x="289" y="150" color="#5C5C5C" text="Expected Amount in UGX"/>
+			<s:Label id="buy_expected_lbl" x="289" y="170" color="#767676"
+					 fontFamily="Times New Roman" fontSize="24" text="0"/>
+			<mx:VRule x="267" y="0" height="100%"/>
+		</s:Group>	
+<!-- Requests grid -->			
+		<s:DataGrid id="auction_dg" includeIn="Auction_Details,Auction,Auction_Offer,Auction_Message"
+					x="0" y="0" width="100%" height="40%"
+					creationComplete="auction_dg_creationCompleteHandler(event)"
+					enabled="{getActiveAuctionsResult.lastResult != null &amp;&amp; getActiveAuctionsResult.lastResult.length&gt;0}"
+					requestedRowCount="4" selectionChange="auction_dg_selectionChangeHandler(event)"
+					doubleClick="auction_dg_selectionChangeHandler(event)"
+					height.Auction="100%" doubleClickEnabled="true" >
+			<s:columns>
+				<s:ArrayList>
+					<s:source>
+						<s:GridColumn dataField="bureaus_name" headerText="Bureau"
+									  headerText.Auction="Request by"></s:GridColumn>
+						<s:GridColumn dataField="from_currency" headerText="Currency"></s:GridColumn>
+						<s:GridColumn includeIn="Auction_Details,Auction_Offer,Auction_Message"
+									  dataField="to_currency" headerText="To"></s:GridColumn>
+						<s:GridColumn dataField="amount" headerText="Amount"></s:GridColumn>
+						<s:GridColumn dataField="min_rate" headerText="Starting rate"
+									  headerText.Auction="Asking rate"></s:GridColumn>
+						<s:GridColumn dataField="expires" headerText="Expires" labelFunction="date_format"></s:GridColumn>
+					</s:source>
+				</s:ArrayList>
+			</s:columns>
+			<s:dataProvider>
+				<s:AsyncListView list="{getActiveAuctionsResult.lastResult}"/>
+			</s:dataProvider>
+		</s:DataGrid>
+		
+
+<!-- Offers made on my requests -->
+		<s:DataGrid id="offers_dg" includeIn="Offers" x="0" y="0" width="100%" height="100%"
+					creationComplete="offers_dg_creationCompleteHandler(event)" requestedRowCount="4"
+					enabled="{getOffersResult.lastResult != null &amp;&amp; getOffersResult.lastResult.length>0}">
+			<s:columns>
+				<s:ArrayList>
+					<s:GridColumn dataField="bids_status" headerText="Offer Status"></s:GridColumn>
+					<s:GridColumn dataField="bureaus_name" headerText="Requested by"></s:GridColumn>
+					<s:GridColumn dataField="bids_offer" headerText="My offer"></s:GridColumn>
+					<s:GridColumn dataField="to_currency" headerText="Buying"></s:GridColumn>
+					<s:GridColumn dataField="from_currency" headerText="Selling"></s:GridColumn>
+					<s:GridColumn dataField="amount" headerText="Amount"></s:GridColumn>
+					<s:GridColumn dataField="expires" headerText="Request expiry" labelFunction="date_format"></s:GridColumn>
+					<s:GridColumn dataField="bids_dated" headerText="Offer date" labelFunction="date_format"></s:GridColumn>
+				</s:ArrayList>
+			</s:columns>
+			<s:AsyncListView list="{getOffersResult.lastResult}"/>
+		</s:DataGrid>
+
+<!-- My Requests grid -->
+		
+		<s:DataGrid id="my_auctions_dg" includeIn="My_Auction_Details,My_Auctions" x="0" y="0"
+					width="100%" height="100%"
+					creationComplete="my_auctions_dg_creationCompleteHandler(event)"
+					requestedRowCount="4"
+					selectionChange="my_auctions_dg_selectionChangeHandler(event)"
+					height.My_Auction_Details="40%"
+					enabled="{getMyAuctionsResult2.lastResult != null &amp;&amp; getMyAuctionsResult2.lastResult.length>0}">
+			<s:columns>
+				<s:ArrayList>
+					<s:GridColumn dataField="bids" headerText="Offers"></s:GridColumn>
+					<s:GridColumn dataField="from_currency" headerText="From (Buying)"></s:GridColumn>
+					<s:GridColumn dataField="to_currency" headerText="To (Selling)"></s:GridColumn>
+					<s:GridColumn dataField="amount" headerText="Amount"></s:GridColumn>
+					<s:GridColumn dataField="min_rate" headerText="Starting rate"></s:GridColumn>
+					<s:GridColumn dataField="expires" headerText="Expires" labelFunction="date_format"></s:GridColumn>
+					<s:GridColumn dataField="status" headerText="Status"></s:GridColumn>
+				</s:ArrayList>
+			</s:columns>
+			
+			<s:AsyncListView list="{getMyAuctionsResult2.lastResult}"/>
+		</s:DataGrid>
+			<s:Panel includeIn="Auction_Details,Auction_Offer,Auction_Message,My_Auction_Details"
+					 width="100%" height="100%" title="Request Details"
+					 x.Auction_Details="0" top.Auction_Details="{auction_dg.height}"
+					 x.Auction_Message="0" top.Auction_Message="{auction_dg.height}"
+					 x.Auction_Offer="0" top.Auction_Offer="{auction_dg.height}"
+					 x.My_Auction_Details="0" top.My_Auction_Details="{my_auctions_dg.height}"
+					 title.My_Auction_Details="Offers on My Request">
+				<s:Scroller x="0" y="0" width="100%" height="100%">
+					<s:Group width="100%" height="100%">
+						<s:Form includeIn="Auction_Details,Auction_Offer,Auction_Message" x="10" y="10">
+							<s:FormHeading id="buyDetailsHeading" label="Heading"/>
+							<s:FormItem 
+										label="Bureau">
+								<s:Label id="bureaus_nameLabel" text=""/>
+							</s:FormItem>
+							<s:FormItem label="Office phone">
+								<s:Label id="officephoneLabel" text=""/>
+							</s:FormItem>
+							<s:FormItem label="Cell phone">
+								<s:Label id="cellphoneLabel" text=""/>
+							</s:FormItem>
+							<s:FormItem label="Email">
+								<s:Label id="emailLabel" text=""/>
+							</s:FormItem>
+							<s:FormItem label="Premises">
+								<s:Label id="premisesLabel" text=""/>
+							</s:FormItem>
+							<s:FormItem label="Street">
+								<s:Label id="streetLabel" text=""/>
+							</s:FormItem>
+							<s:FormItem label="City">
+								<s:Label id="cityLabel" text=""/>
+							</s:FormItem>
+						</s:Form>
+						
+					</s:Group>
+					</s:Scroller>
+				
+				<s:Scroller x="0" y="0" width="100%" height="100%" includeIn="My_Auction_Details">
+					<s:Group width="100%" height="100%">
+						<s:DataGrid id="auction_offers_dg" x="0" y="0" width="100%" height="100%"
+									creationComplete="auction_offers_dg_creationCompleteHandler(event)"
+									enabled="{getAuctionOffersResult.lastResult != null &amp;&amp; getAuctionOffersResult.lastResult.length&gt;0}"
+									requestedRowCount="4">
+							<s:columns>
+								<s:ArrayList>
+									<s:GridColumn dataField="bids_offer" headerText="Amount offered"></s:GridColumn>
+									<s:GridColumn dataField="bureaus_name" headerText="Bureaus Name"></s:GridColumn>
+									<s:GridColumn dataField="bids_dated" headerText="Timestamp" labelFunction="date_format"></s:GridColumn>
+									<s:GridColumn dataField="bids_status" headerText="Status"></s:GridColumn>
+									<s:GridColumn dataField="bids_expiry" headerText="Expires" labelFunction="date_format"></s:GridColumn>
+								</s:ArrayList>
+							</s:columns>
+							<s:AsyncListView list="{getAuctionOffersResult.lastResult}"/>
+						</s:DataGrid>
+					</s:Group>
+				</s:Scroller>
+				<s:Button id="place_offer_btn" includeIn="Auction_Details,Auction_Offer,Auction_Message" x="158"
+						  y="-30" label="Make an Offer" click="place_offer_btn_clickHandler(event)"
+						  enabled="false" icon="{bidIcon}"/>
+				
+				<s:Button id="auction_msg_btn"
+						  includeIn="Auction_Details,Auction_Offer,Auction_Message" x="288" y="-30"
+						  label="Send message"
+						  click="auction_msg_btn_clickHandler(event)" enabled="false"
+						  icon="{messageIcon}"/>
+				<s:Button id="close_request_btn"
+						  includeIn="My_Auction_Details" x="158" y="-30" label="Accept latest Offer"
+						  click="close_request_btn_clickHandler(event)" enabled="false"
+						  icon="{closeAuctionIcon}"/>
+				<s:Button id="cancel_auction_btn" includeIn="My_Auction_Details"
+						  x="310" y="-30" label="Cancel"
+						  click="cancel_auction_btn_clickHandler(event)" enabled="false"
+						  icon="{cancelIcon}"/>
+				<s:Button id="refresh_offers" includeIn="My_Auction_Details" x="405" y="-30"
+						  label="Refresh" click="refresh_offers_clickHandler(event)" 
+						  icon="{refreshIcon}"/>
+			</s:Panel>
+			
+			<s:Form includeIn="Auction_Complete" x="20" y="21">
+				<s:FormHeading width="217" label="Auction complete" color="#A2C1C1" fontSize="24"/>
+				<s:Label color="#858585" text="You have successfully completed your Auction"/>
+				<s:FormItem label="Auction Winner">
+					<s:Label text="{auction_bids2.bureaus_name}"/>
+				</s:FormItem>
+				<s:FormItem label="Rate offered">
+					<s:Label text="{moneyFormatter.format(auction_bids2.bids_offer)} UGX"/>
+				</s:FormItem>
+				<s:FormItem label="Amount you auctioned">
+					<s:Label text="{moneyFormatter.format(my_auction_selected.amount)} {my_auction_selected.from_currency}"/>
+				</s:FormItem>
+				<s:FormItem label="Expected total">
+					<s:Label text="{moneyFormatter.format(parseFloat(my_auction_selected.amount) * parseFloat(auction_bids2.bids_offer))} UGX"/>
+				</s:FormItem>
+				<s:FormHeading label="Winners details"/>
+				<s:FormItem label="Office phone">
+					<s:Label text="{auction_bids2.officephone}"/>
+				</s:FormItem>
+				<s:FormItem label="Cellphone">
+					<s:Label text="{auction_bids2.cellphone}"/>
+				</s:FormItem>
+				<s:FormItem label="Location">
+					<s:Label text="{auction_bids2.premises}, {auction_bids2.street}, {auction_bids2.city}"/>
+				</s:FormItem>
+			</s:Form>
+			<s:Image includeIn="Auction_Complete" x="2" y="28" source="assets/success.png"/>
+		</s:Group>
+		</s:Scroller>
+	</s:Panel>
+	
+<!-- Auction details -->
+	<s:Panel includeIn="International_Rates" x="348" y="129" width="100%" height="100%"
+			 title="Global Forex exchange rates">
+		
+		<mx:HTML id="int_rates_html" x="10" y="10" width="100%" height="100%" location="{pockets.international_url}">
+		</mx:HTML>
+		
+	</s:Panel>	
+	
+	<s:Panel includeIn="Messages,Messages_Reply,Notifications" x="348" y="129" width="100%"
+			 height="100%" title="Inbox"
+			 title.Notifications="Notification">
+		<s:Scroller x="0" y="0" width="100%" height="100%">
+			<s:Group width="100%" height="100%">
+				<s:Form x="0" y="0" width="100%">
+					<s:FormItem includeIn="Messages,Messages_Reply" label="From:">
+						<s:Label id="msg_bureaus_name" text=""/>
+					</s:FormItem>
+					<s:FormItem label="Dated"
+								label.Notifications="All notifications are also sent to your registered email address"
+								color.Notifications="#767676">
+						<s:Label id="msg_datedDateField" text=""/>
+					</s:FormItem>
+					<s:Panel width="100%" height="100%" title="Message" bottom="10">
+						<s:layout.Messages>
+							<s:ConstraintLayout/>
+						</s:layout.Messages>
+						<s:layout.Notifications>
+							<s:ConstraintLayout/>
+						</s:layout.Notifications>
+						<mx:Text id="msg_messageLabel" width="100%" height="100%"
+								 includeIn="Messages,Messages_Reply"
+								 paddingLeft="10" paddingRight="15" paddingBottom="10" paddingTop="10">
+							
+						</mx:Text>
+						<mx:HTML id="notification_msg" width="100%" height="100%" includeIn="Notifications"
+								 paddingLeft="10" paddingRight="15" paddingBottom="10" paddingTop="10" />
+						
+					</s:Panel>
+				</s:Form>
+			</s:Group>
+		</s:Scroller>
+		<s:Button id="reply_msg_btn" includeIn="Messages,Messages_Reply" x="83" y="-27" label="Reply"
+				  click="reply_msg_btn_clickHandler(event)"/>
+		<s:Button id="del_msg_btn" includeIn="Messages,Messages_Reply" x="161" y="-27" label="Delete"
+				  click="del_msg_btn_clickHandler(event)"/>
+	</s:Panel>
+	<s:Panel includeIn="Message_Deleted,Messages_Sent"  width="100%" height="100%"
+			 title="Sent"
+			 title.Message_Deleted="Messages"
+			 x="348" y="129">
+		<s:Scroller x="0" y="0" width="100%" height="100%">
+			<s:Group width="90%" height="100%">
+				<s:Form includeIn="Messages_Sent" x="0" y="0" width="100%">
+					<s:FormItem label="To">
+						<s:Label id="sent_bureaus_name" text=""/>
+					</s:FormItem>
+					<s:FormItem label="Dated">
+						<s:Label id="sent_datedDateField" text=""/>
+					</s:FormItem>
+					<s:Panel width="100%" height="100%" title="Message" bottom="10">
+						<s:layout.Messages>
+							<s:ConstraintLayout/>
+						</s:layout.Messages>
+						<s:Label id="sent_messageLabel" text="" width="80%"
+								 paddingLeft="10" paddingRight="15" paddingBottom="10" paddingTop="10"/>
+					</s:Panel>
+				</s:Form>
+				<s:Label includeIn="Message_Deleted" x="164" y="109" width="251" height="36"
+						 color="#BBBBBB" fontSize="24" text="Select a message."/>
+			</s:Group>
+		</s:Scroller>
+		<s:Button id="delete_sent_msg_btn" includeIn="Messages_Sent" x="83" y="-27" label="Delete"
+				  click="delete_sent_msg_btn_clickHandler(event)"/>
+		
+	</s:Panel>
+	<s:BorderContainer includeIn="Auction,Auction_Complete,Auction_Details,Auction_Message,Auction_New,Auction_Offer,International_Rates,Local_Rates,Local_Rates_Details,Message_Deleted,Messages,Messages_Reply,Messages_Sent,My_Auction_Details,My_Auctions,Notifications,Offers,Profile,Sell,Sell_Bid,Sell_Bids,Sell_Complete,Sell_Details,Sell_New,Sell_Sales,Sell_Sales_Bids"
+					   top="80" width="349" height="100%">
+		<mx:TabNavigator id="main_tabnav" x="0" y="0" width="340" height="60%" borderVisible="false"
+						 cornerRadius="5">
+			<s:NavigatorContent id="nav_my_rates" width="100%" height="100%"
+								label="My Rates     ."
+								icon="{ratesIcon}">
+				
+				<s:Panel x="0" y="-10" width="340" height="100%" title="Current rates">
+					<s:DataGrid id="my_rates_grid" x="0" y="0" width="100%" height="100%"
+								creationComplete="my_rates_grid_creationCompleteHandler(event)"
+								editable="true" alternatingRowColors="[#FFFFFF, #e9f1f6]"
+								gridItemEditorSessionSave="my_rates_grid_gridItemEditorSessionSaveHandler(event)"
+								requestedRowCount="4"
+								selectionChange="my_rates_grid_selectionChangeHandler(event)">
+						<s:columns>
+							<s:ArrayList>
+								<s:source>
+									<s:GridColumn width="16" dataField="dataField1" resizable="false"
+												  sortable="false" >
+										<s:itemRenderer>
+											<fx:Component>
+												<s:GridItemRenderer>
+													<s:VGroup width="100%" height="100%" paddingTop="7">
+														<s:Image source="assets/{data.currency_abbr}.png"/>
+													</s:VGroup>  
+													
+													
+												</s:GridItemRenderer>
+											</fx:Component>
+										</s:itemRenderer>
+									</s:GridColumn>
+									<s:GridColumn dataField="currency_abbr" headerText="CURRENCY"></s:GridColumn>
+									<s:GridColumn dataField="buying" headerText="BUYING"></s:GridColumn>
+									<s:GridColumn dataField="selling" headerText="SELLING"></s:GridColumn>
+								</s:source>
+								
+							</s:ArrayList>
+						</s:columns>
+						<s:typicalItem>
+							<fx:Object 
+								buying="buying1"
+								currency_abbr="currency_abbr1"
+								currency_id="currency_id1" 
+								dated="dated1"
+								selling="selling1"></fx:Object>
+						</s:typicalItem>
+						<s:dataProvider>
+							<s:AsyncListView list="{getMyRatesResult.lastResult}"/>
+						</s:dataProvider>
+					</s:DataGrid>
+				</s:Panel>
+			</s:NavigatorContent>
+			<s:NavigatorContent id="messages_tab" width="100%" height="100%"
+								label="Messages     ."
+								icon="{messageIcon}">
+				<s:Panel x="0" y="-10" width="340" height="100%" title="Messages"
+						 title.Messages="Message Center"
+						 title.Notifications="Message Center">
+					<mx:TabNavigator id="messages_tabnav" x="0" y="0" width="339" height="100%"
+								 creationComplete="messages_tabnav_creationCompleteHandler(event)">
+					
+						<s:NavigatorContent id="inbox_tab" width="100%" height="100%"
+											label="Inbox           ." backgroundAlpha="0"
+											backgroundColor="green"
+											icon="@Embed('assets/message1.png')">
+							
+								<s:DataGrid id="inbox_dg" x="0" y="-10" width="337" height="100%"
+											creationComplete="inbox_dg_creationCompleteHandler(event)"
+											requestedRowCount="4"
+											selectionChange="inbox_dg_selectionChangeHandler(event)"
+											borderVisible="false" >
+									<s:columns>
+										<s:ArrayList>
+											<s:source>
+												<s:GridColumn dataField="bureaus_name"
+															  headerText="From"></s:GridColumn>
+												<s:GridColumn dataField="dated" headerText="dated"
+															  width="150" labelFunction="date_format"></s:GridColumn>
+												<s:GridColumn dataField="msg_status" headerText="Status"
+															  width="60"></s:GridColumn>
+											</s:source>
+										</s:ArrayList>
+									</s:columns>
+									<s:typicalItem>
+										<fx:Object 
+												   bureaus_name="bureaus_name"
+												   dated="dated"
+												   msg_status="msg_status"
+											></fx:Object>
+									</s:typicalItem>
+									<s:dataProvider>
+										<s:AsyncListView list="{getInboxResult.lastResult}"/>
+									</s:dataProvider>
+								</s:DataGrid>
+							
+							<s:Panel x="0" y="-11" width="337" title="Message to Seller"
+									 height="100%" includeIn="Auction_Message">
+								<s:Form x="0" y="10" width="325">
+									<s:DropDownList id="auction_msg_dlist" width="308" labelField="bureaus_name" 
+													creationComplete="auction_msg_dlist_creationCompleteHandler(event)" >
+										<s:dataProvider>
+											<s:AsyncListView list="{bureau_item}"/>
+										</s:dataProvider>
+									</s:DropDownList>
+									<s:TextArea id="auction_msg_txtarea" width="315"
+												prompt="Your message"/>
+									<s:Button id="auction_msg_send_btn" label="Send"
+											  click="auction_msg_send_btn_clickHandler(event)"/>
+								</s:Form>
+								<s:Button id="auction_msg_cancel_btn" x="259" y="-26" label="Cancel"
+										  click="auction_msg_cancel_btn_clickHandler(event)"/>
+							</s:Panel>
+						</s:NavigatorContent>
+						<s:NavigatorContent id="sent_tab" width="100%" height="100%"
+											label="Sent            ."
+											icon="@Embed('assets/message_sent1.png')">
+							<s:DataGrid id="sent_dg" x="0" y="-10" width="337" height="100%"
+										creationComplete="sent_dg_creationCompleteHandler(event)"
+										requestedRowCount="4"
+										selectionChange="sent_dg_selectionChangeHandler(event)"
+										borderVisible="false">
+								<s:columns>
+									<s:ArrayList>
+										<s:source>
+											<s:GridColumn dataField="bureaus_name"
+														  headerText="To"></s:GridColumn>
+											<s:GridColumn dataField="dated" headerText="dated" labelFunction="date_format"></s:GridColumn>
+										</s:source>
+									</s:ArrayList>
+								</s:columns>
+								<s:typicalItem>
+									<fx:Object 
+											   bureaus_name="bureaus_name1"
+											   dated="dated1"
+											   ></fx:Object>
+								</s:typicalItem>
+								<s:dataProvider>
+									<s:AsyncListView list="{getSentResult.lastResult}"/>
+								</s:dataProvider>
+							</s:DataGrid>
+						</s:NavigatorContent>
+						<s:NavigatorContent id="compose_tab" width="100%" height="100%"
+											label="Compose         ."
+											icon="@Embed('assets/compose.png')">
+							<s:Panel includeIn="Auction,Auction_Complete,Auction_Details,Auction_New,Auction_Offer,International_Rates,Local_Rates,Local_Rates_Details,Message_Deleted,Messages,Messages_Sent,My_Auction_Details,My_Auctions,Notifications,Offers,Profile,Sell,Sell_Bid,Sell_Bids,Sell_Complete,Sell_Details,Sell_New,Sell_Sales,Sell_Sales_Bids"
+									 x="0" y="-11" width="337" height="100%" title="New Message"
+									 dropShadowVisible="false" borderVisible="false">
+								<s:Form x="0" y="0" width="325"
+										 height="100%">
+									<s:DropDownList id="to_dlist" width="308"
+													creationComplete="to_dlist_creationCompleteHandler(event)"
+													labelField="bureaus_name" prompt="Select Recipient"
+													change="to_dlist_changeHandler(event)">
+										<s:dataProvider>
+											<s:AsyncListView list="{getBureausResult.lastResult}"/>
+										</s:dataProvider>
+									</s:DropDownList>
+									<s:TextArea id="msg_txtarea" width="315" height="100%"
+												prompt="Your message"/>
+									<s:Button id="send_msg" label="Send" click="send_msg_clickHandler(event)"/>
+								</s:Form>
+							</s:Panel>
+							<s:Panel x="0" y="-11" width="337" title="Reply message"
+									 height="100%" includeIn="Messages_Reply">
+								<s:Form x="0" y="10" width="325">
+										<s:DropDownList id="replyto_dlist" width="308" labelField="bureaus_name" 
+														creationComplete="replyto_dlist_creationCompleteHandler(event)" >
+											<s:dataProvider>
+												<s:AsyncListView list="{bureau_item}"/>
+											</s:dataProvider>
+										</s:DropDownList>
+									<s:TextArea id="replymsg_txtarea" width="315"
+												prompt="Your message"/>
+									<s:Button id="send_reply_btn" label="Send"
+											  click="send_reply_btn_clickHandler(event)"/>
+								</s:Form>
+								<s:Button id="reply_cancel_btn" x="259" y="-26" label="Cancel"
+										  click="reply_cancel_btn_clickHandler(event)"/>
+							</s:Panel>
+							
+						</s:NavigatorContent>
+					</mx:TabNavigator>
+				</s:Panel>
+			</s:NavigatorContent>
+			<s:NavigatorContent id="notifications_tab" 
+								width="100%" height="100%" label="Notifications"
+								icon="{notificationIcon}">
+				<s:BorderContainer width="100%" height="100%" borderColor="#e2e2e2"
+								   borderVisible="true">
+					<s:DataGrid id="notifications_dg" x="0" y="-10" width="100%"
+								height="100%" borderVisible="false"
+								creationComplete="notifications_dg_creationCompleteHandler(event)"
+								requestedRowCount="4"
+								selectionChange="notifications_dg_selectionChangeHandler(event)">
+						<s:columns>
+							<s:ArrayList>
+								<s:GridColumn dataField="dated" headerText="Dated" labelFunction="date_format"></s:GridColumn>
+								<s:GridColumn dataField="msg_status" headerText="Status"></s:GridColumn>
+							</s:ArrayList>
+						</s:columns>
+						<s:typicalItem>
+							<fx:Object bureaus_name="bureaus_name1" dated="dated1"
+									   from_user_id="from_user_id1" message="message1"
+									   msg_id="msg_id1" msg_status="msg_status1"></fx:Object>
+						</s:typicalItem>
+						<s:AsyncListView list="{getNotificationsResult.lastResult}"/>
+					</s:DataGrid>
+				</s:BorderContainer>
+					
+				
+			</s:NavigatorContent>
+		</mx:TabNavigator>
+		
+		<s:Panel width="338" title="Announcements"
+				 x="0" bottom="0" height="40%">
+			
+			<s:List id="annoucementList" 
+					dataProvider="{getAnnouncementsResult.lastResult}" 
+					creationComplete="getAnnouncements()"
+					itemRenderer="components.AnnouncementsIR"
+					x="0" height="100%" width="100%"
+					visible="{getAnnouncementsResult.lastResult != null}">
+				
+				<s:layout>
+					<s:VerticalLayout />
+				</s:layout>
+			</s:List>
+			<s:Label id="no_announcement_lbl" x="10" y="70" color="#CFCFCF"
+					 fontFamily="Verdana" fontSize="30" text="No Announcements"
+					 visible="{!annoucementList.visible}"/>
+		</s:Panel>
+		
+		<s:Panel includeIn="Auction_Offer" x="2" y="2" width="325"  title="Make an Offer">
+			<s:Button id="cancel_offer_btn" right="10" top="-27" label="Cancel" click="cancel_offer_btn_clickHandler(event)"/>
+			
+			<s:Form x="0" y="0" width="304">
+				<s:FormItem label="Starting Offer">
+					<s:TextInput id="min_offer" width="162" enabled="false"
+								 text="{auction_selected.min_rate}" />
+				</s:FormItem>
+				<s:FormItem label="Latest Offer">
+					<s:TextInput id="bids_offerTextInput" width="162" enabled="false"
+								 text="{latest_Offer.bids_offer}"/>
+					<s:Label id="latest_offer_dated" color="#6A6A6A" text=""/>
+					
+				</s:FormItem>
+				<s:FormItem label="Your Offer">
+					<s:TextInput id="offer_txt" width="163" toolTip=""/>
+					<s:Label color="#595959" text="Must be equal or LOWER than &#xd;the Starting offer or LOWER than the Current offer"/>
+				</s:FormItem>
+				<s:FormItem label="Validity period">
+					<s:DropDownList id="offer_hours" requireSelection="true">
+						<s:ArrayCollection>
+							<fx:String>00:30</fx:String>
+							<fx:String>01:00</fx:String>
+							<fx:String>01:30</fx:String>
+							<fx:String>02:00</fx:String>
+							<fx:String>02:30</fx:String>
+							<fx:String>03:00</fx:String>
+							<fx:String>03:30</fx:String>
+							<fx:String>04:00</fx:String>
+							<fx:String>04:30</fx:String>
+							<fx:String>05:00</fx:String>
+							<fx:String>05:30</fx:String>
+							<fx:String>06:00</fx:String>
+						</s:ArrayCollection>
+					</s:DropDownList>
+					<s:Label text="Your offer will be valid for {offer_hours.selectedItem} Hours" color="#595959" />
+				</s:FormItem>
+				
+				<s:FormItem label="Inforex Terms and Conditions">
+					<s:Label id="terms" text="» Read here" color="#215DAF" click="terms_clickHandler(event)"/>
+					<s:CheckBox id="offerTermsCheck" label="I agree"/>
+				</s:FormItem>
+				<s:Button id="submit_offer_btn" label="Submit Offer" click="validateBuyOffer()"/>
+			</s:Form>
+		</s:Panel>
+		<s:Panel includeIn="Sell_Bid" x="2" y="2" width="325"  title="Place your Bid">
+			<s:Button id="cancel_bid_btn" right="10" top="-27" label="Cancel" click="cancel_bid_btn_clickHandler(event)"/>
+			
+			<s:Form x="0" y="0" width="304">
+				<s:FormItem label="Starting Bid">
+					<s:TextInput id="min_bid" width="162" enabled="false"
+								 text="{sale_selected.min_rate}" />
+				</s:FormItem>
+				<s:FormItem label="Current winning Bid">
+					<s:TextInput id="bids_TextInput" width="162" enabled="false"
+								 text="{latest_Bid.bids_offer}"/>
+					<s:Label id="latest_bid_dated" color="#6A6A6A" text=""/>
+					
+				</s:FormItem>
+				<s:FormItem label="Your Bid">
+					<s:TextInput id="bid_txt" width="163" toolTip=""/>
+					<s:Label color="#595959" text="Must be equal or HIGHER than &#xd;the Starting Bid or HIGHER than the Current Bid"/>
+				</s:FormItem>
+				<s:FormItem label="Validity period">
+					<s:DropDownList id="bid_hours" requireSelection="true">
+						<s:ArrayCollection>
+							<fx:String>00:30</fx:String>
+							<fx:String>01:00</fx:String>
+							<fx:String>01:30</fx:String>
+							<fx:String>02:00</fx:String>
+							<fx:String>02:30</fx:String>
+							<fx:String>03:00</fx:String>
+							<fx:String>03:30</fx:String>
+							<fx:String>04:00</fx:String>
+							<fx:String>04:30</fx:String>
+							<fx:String>05:00</fx:String>
+							<fx:String>05:30</fx:String>
+							<fx:String>06:00</fx:String>
+						</s:ArrayCollection>
+					</s:DropDownList>
+					<s:Label text="Your offer will be valid for {bid_hours.selectedItem} Hours" color="#595959" />
+				</s:FormItem>
+				
+				<s:FormItem label="Inforex Terms and Conditions">
+					<s:Label text="» Read here" color="#215DAF" click="terms_clickHandler(event)"/>
+					<s:CheckBox id="bidTermsCheck" label="I agree"/>
+				</s:FormItem>
+				<s:Button id="submit_bid_btn" label="Submit Bid" click="validateSellBid()"/>
+			</s:Form>
+		</s:Panel>
+	</s:BorderContainer>
+	
+	<s:Panel includeIn="Sell,Sell_Bid,Sell_Bids,Sell_Complete,Sell_Details,Sell_New,Sell_Sales,Sell_Sales_Bids,Sell_Complete"
+			 x="348" y="129" width="100%" height="100%" title="Active Sales"
+			 title.Sell_Bids="My Bids"
+			 title.Sell_New="New Sale"
+			 title.Sell_Sales="My Sales"
+			 title.Sell_Sales_Bids="My Sales">
+		<s:Button id="new_sell_btn" x="177" y="-30"
+				  label="Sell Currency" chromeColor="#A5FF8D"
+				  click="new_sell_btn_clickHandler(event)"
+				  enabled.Sell_New="false"
+				  skinClass="customSkins.coloredBtnIcon"
+				  icon="{requestAddIcon}"/>
+		<s:Button id="my_bids_btn" x="304" y="-30" label="My Bids" chromeColor="#A5FF8D"
+				  click="my_bids_btn_clickHandler(event)" icon="{myOffersIcon}"
+				  skinClass="customSkins.coloredBtnIcon" toolTip="View Bids you have made"
+				  enabled.Sell_Bids="false"/>
+		<s:Button id="my_sales_btn" x="398" y="-30" label="My Sales" chromeColor="#A5FF8D"
+				  click="my_sales_btn_clickHandler(event)" icon="{myTransactionsIcon}"
+				  skinClass="customSkins.coloredBtnIcon" toolTip="Manage Sales you have made."
+				  enabled.Sell_Sales="false"
+				  enabled.Sell_Sales_Bids="false"/>
+		<s:Label id="no_sale_label1" includeIn="Sell,Sell_Complete" x="157" y="123" color="#CFCFCF"
+				 fontFamily="Verdana" fontSize="30" text="No Active Sales"
+				 visible="false"/>
+		<s:Label id="no_sale_label2" includeIn="Sell,Sell_Complete" x="177" y="157" color="#909090"
+				 text="Sell Currency to create a new Sale"
+				 visible="false"/>
+		
+<!-- My Sales grid -->
+		<s:DataGrid id="my_sales_dg" includeIn="Sell_Sales_Bids, Sell_Sales" x="0" y="0" 
+					width="100%" height="100%"
+					height.Sell_Sales_Bids="40%" creationComplete="my_sales_dg_creationCompleteHandler(event)"
+					enabled="{getMySalesResult.lastResult != null &amp;&amp; getMySalesResult.lastResult.length&gt;0}"
+					requestedRowCount="4"
+					selectionChange="my_sales_dg_selectionChangeHandler(event)">
+			<s:columns>
+				<s:ArrayList>
+					<s:GridColumn dataField="bids" headerText="Offers"></s:GridColumn>
+					<s:GridColumn dataField="from_currency" headerText="From (Buying)"></s:GridColumn>
+					<s:GridColumn dataField="to_currency" headerText="To (Selling)"></s:GridColumn>
+					<s:GridColumn dataField="amount" headerText="Amount"></s:GridColumn>
+					<s:GridColumn dataField="min_rate" headerText="Starting rate"></s:GridColumn>
+					<s:GridColumn dataField="expires" headerText="Expires" labelFunction="date_format"></s:GridColumn>
+					<s:GridColumn dataField="status" headerText="Status"></s:GridColumn>
+				</s:ArrayList>
+			</s:columns>
+			
+			<s:AsyncListView list="{getMySalesResult.lastResult}"/>
+		</s:DataGrid>
+		
+
+		
+		
+<!-- Bids I made on sales from other bureaus -->
+		<s:DataGrid id="bids_dg" includeIn="Sell_Bids" x="0" y="0" width="100%" height="100%"
+					creationComplete="bids_dg_creationCompleteHandler(event)" requestedRowCount="4"
+					enabled="{getBidsResult.lastResult != null &amp;&amp; getBidsResult.lastResult.length>0}">
+			<s:columns>
+				<s:ArrayList>
+					<s:GridColumn dataField="bids_status" headerText="Bid Status"></s:GridColumn>
+					<s:GridColumn dataField="bureaus_name" headerText="Seller"></s:GridColumn>
+					<s:GridColumn dataField="bids_offer" headerText="My Bid"></s:GridColumn>
+					<s:GridColumn dataField="to_currency" headerText="Buying"></s:GridColumn>
+					<s:GridColumn dataField="from_currency" headerText="Selling"></s:GridColumn>
+					<s:GridColumn dataField="amount" headerText="Amount"></s:GridColumn>
+					<s:GridColumn dataField="expires" headerText="Sale expiry" labelFunction="date_format"></s:GridColumn>
+					<s:GridColumn dataField="bids_dated" headerText="Bid date" labelFunction="date_format"></s:GridColumn>
+				</s:ArrayList>
+			</s:columns>
+			<s:AsyncListView list="{getBidsResult.lastResult}"/>
+		</s:DataGrid>
+<!-- new Sales form -->
+		<s:Group includeIn="Sell_New" width="100%" height="100%">
+			<s:VGroup>
+				<s:Form x="0" y="-1" width="265" height="400">
+					<s:FormItem label="I am Selling" >
+						<s:DropDownList id="sell_currency_dlist" change="sell_min_rate_txt_changeHandler()"
+										creationComplete="target_dlist_creationCompleteHandler(event)"
+										labelField="currency_abbr" prompt="Select" requireSelection="true">
+							<s:AsyncListView list="{getCurrenciesResult2.lastResult}"/>
+						</s:DropDownList>
+					</s:FormItem>
+					<s:FormItem label="Amount" required="true">
+						<s:TextInput id="sell_amount_txt" prompt="In Selling currency" change="sell_min_rate_txt_changeHandler()" />
+					</s:FormItem>
+					<s:FormItem label="Minimum Exchange rate">
+						<s:TextInput id="sell_rate_txt" change="sell_min_rate_txt_changeHandler()"/>
+					</s:FormItem>
+					<s:FormItem label="Expiry date">
+						<mx:DateField id="sell_expiry_date" disabledRanges="{[{rangeEnd: new Date(today.getFullYear(),today.getMonth(),today.getDate() - 1)}]}"/>
+					</s:FormItem>
+					<mx:HRule width="264"/>
+					<s:Form>
+						<s:Button id="submit_sell_currency" width="100" height="35" label="Submit"
+								  click="validateSellCurrency()" styleName="nav"/>
+					</s:Form>
+					
+				</s:Form>
+				
+				
+			</s:VGroup>
+			<s:Group left="265" top="20">
+				
+				<s:FormItem left="10" width="254"  label="Expiry time(Hrs:Mins)" styleName="unstacked">
+					
+				</s:FormItem>
+				<s:NumericStepper id="sell_dateHour" left="26" top="35" maximum="12" minimum="1"
+								  styleName="unstacked" value="{today.getHours() + 1}"
+								  valueFormatFunction="{leadingZero}"/>
+				<s:Label left="84" fontWeight="bold" text=":" top="40"/>
+				<s:NumericStepper id="sell_dateMinute"  left="91" maximum="59" top="35"
+								  minimum="0" value="{today.getMinutes()}"
+								  valueFormatFunction="{leadingZero}"/>
+				<s:DropDownList left="152" id="sell_am_pm" requireSelection="true" top="35">
+					<s:ArrayCollection>
+						<fx:String>AM</fx:String>
+						<fx:String>PM</fx:String>
+					</s:ArrayCollection>
+				</s:DropDownList>
+			</s:Group>
+			<s:Label x="289" y="150" color="#5C5C5C" text="Expected Amount in UGX"/>
+			<s:Label id="sell_expected_lbl" x="289" y="170" color="#767676"
+					 fontFamily="Times New Roman" fontSize="24" text="0"/>
+			<mx:VRule x="267" y="0" height="100%"/>
+		</s:Group>
+		
+<!-- Sell DG -->
+		<s:DataGrid id="sell_dg" includeIn="Sell,Sell_Bid,Sell_Details" x="0" y="0" width="100%"
+					height="100%" creationComplete="sell_dg_creationCompleteHandler(event)"
+					doubleClick="sell_dg_selectionChangeHandler(event)" doubleClickEnabled="true"
+					enabled="{getActiveSalesResult.lastResult != null &amp;&amp; getActiveSalesResult.lastResult.length&gt;0}"
+					requestedRowCount="4" selectionChange="sell_dg_selectionChangeHandler(event)"
+					height.Sell_Bid="40%"
+					height.Sell_Details="40%">
+			<s:columns>
+				<s:ArrayList>
+					<s:GridColumn dataField="bureaus_name" headerText="Seller"></s:GridColumn>
+					<s:GridColumn dataField="from_currency" headerText="Currency"></s:GridColumn>
+					<s:GridColumn dataField="amount" headerText="Amount"></s:GridColumn>
+					<s:GridColumn dataField="min_rate" headerText="Bid rate"></s:GridColumn>
+					<s:GridColumn dataField="expires" headerText="Expires" labelFunction="date_format"></s:GridColumn>
+				</s:ArrayList>
+			</s:columns>
+			<s:typicalItem>
+				<fx:Object amount="amount1" auctions_id="auctions_id1" bureaus_id="bureaus_id1"
+						   bureaus_name="bureaus_name1" cellphone="cellphone1" city="city1"
+						   email="email1" expires="expires1" from_currency="from_currency1"
+						   min_rate="min_rate1" officephone="officephone1" order_id="order_id1"
+						   premises="premises1" status="status1" street="street1"
+						   to_currency="to_currency1"></fx:Object>
+			</s:typicalItem>
+			<s:AsyncListView list="{getActiveSalesResult.lastResult}"/>
+		</s:DataGrid>
+
+<!-- Sale complete -->
+		<s:Form includeIn="Sell_Complete" x="20" y="21">
+			<s:FormHeading width="217" label="Sale complete" color="#A2C1C1" fontSize="24"/>
+			<s:Label color="#858585" text="You have successfully made your Sale"/>
+			<s:FormItem label="Sale Winner">
+				<s:Label text="{auction_bids2.bureaus_name}"/>
+			</s:FormItem>
+			<s:FormItem label="Rate bid">
+				<s:Label text="{moneyFormatter.format(auction_bids2.bids_offer)} UGX"/>
+			</s:FormItem>
+			<s:FormItem label="Amount you put on Sale">
+				<s:Label text="{moneyFormatter.format(my_auction_selected.amount)} {my_auction_selected.from_currency}"/>
+			</s:FormItem>
+			<s:FormItem label="Expected total">
+				<s:Label text="{moneyFormatter.format(parseFloat(my_auction_selected.amount) * parseFloat(auction_bids2.bids_offer))} UGX"/>
+			</s:FormItem>
+			<s:FormHeading label="Winners details"/>
+			<s:FormItem label="Office phone">
+				<s:Label text="{auction_bids2.officephone}"/>
+			</s:FormItem>
+			<s:FormItem label="Cellphone">
+				<s:Label text="{auction_bids2.cellphone}"/>
+			</s:FormItem>
+			<s:FormItem label="Location">
+				<s:Label text="{auction_bids2.premises}, {auction_bids2.street}, {auction_bids2.city}"/>
+			</s:FormItem>
+		</s:Form>
+		<s:Image includeIn="Sell_Complete" x="2" y="28" source="assets/success.png"/>
+<!-- Sell lower panel -->
+		<s:Panel includeIn="Sell_Bid,Sell_Details,Sell_Sales_Bids" x="0" width="100%"
+				 height="100%" title="Sale Details"
+				 top.Sell_Bid="{sell_dg.height}"
+				 top.Sell_Details="{sell_dg.height}"
+				 top.Sell_Sales_Bids="{my_sales_dg.height}">
+			<s:Button id="place_bid_btn" x="158" y="-30" width="120" label="Place a bid"
+					  includeIn="Sell_Bid,Sell_Details"
+					  click="place_bid_btn_clickHandler(event)" enabled="false" icon="{bidIcon}"/>
+			<s:Button id="sell_msg_btn" x="288" y="-30" label="Send message"
+					  includeIn="Sell_Bid,Sell_Details"
+					  click="auction_msg_btn_clickHandler(event)" enabled="false"
+					  icon="{messageIcon}"/>
+			<s:Button id="close_sale_btn"
+					  includeIn="Sell_Sales_Bids" x="158" y="-30" label="Accept latest Offer"
+					  click="close_sale_btn_clickHandler(event)" enabled="false"
+					  icon="{closeAuctionIcon}"/>
+			<s:Button id="cancel_sale_btn" includeIn="Sell_Sales_Bids"
+					  x="310" y="-30" label="Cancel"
+					  click="cancel_sale_btn_clickHandler(event)" enabled="false"
+					  icon="{cancelIcon}"/>
+			<s:Button id="refresh_bids" includeIn="Sell_Sales_Bids" x="405" y="-30"
+					  label="Refresh" click="refresh_bids_clickHandler(event)" 
+					  icon="{refreshIcon}"/>
+<!-- Bids on My Sales -->
+			<s:Scroller x="0" y="0" width="100%" height="100%" includeIn="Sell_Sales_Bids">
+				<s:Group width="100%" height="100%">
+					<s:DataGrid id="sale_bids_dg" x="0" y="0" width="100%" height="100%"
+								creationComplete="sale_bids_dg_creationCompleteHandler(event)"
+								enabled="{getSaleBidsResult.lastResult != null &amp;&amp; getSaleBidsResult.lastResult.length&gt;0}"
+								requestedRowCount="4">
+						<s:columns>
+							<s:ArrayList>
+								<s:GridColumn dataField="bids_offer" headerText="Amount offered"></s:GridColumn>
+								<s:GridColumn dataField="bureaus_name" headerText="Bureaus Name"></s:GridColumn>
+								<s:GridColumn dataField="bids_dated" headerText="Timestamp" labelFunction="date_format"></s:GridColumn>
+								<s:GridColumn dataField="bids_status" headerText="Status"></s:GridColumn>
+								<s:GridColumn dataField="bids_expiry" headerText="Expires" labelFunction="date_format"></s:GridColumn>
+							</s:ArrayList>
+						</s:columns>
+						<s:AsyncListView list="{getSaleBidsResult.lastResult}"/>
+					</s:DataGrid>
+				</s:Group>
+			</s:Scroller>
+			
+<!-- Details of a Sale -->
+			<s:Scroller x="0" y="0" width="100%" height="100%" includeIn="Sell_Details, Sell_Bid">
+				<s:Group width="100%" height="100%">
+					<s:Form x="10" y="10">
+						<s:FormHeading id="sellDetailsHeading" label="Heading"/>
+						<s:FormItem 
+							label="Bureau">
+							<s:Label id="sell_bureaus_nameLabel" text=""/>
+						</s:FormItem>
+						<s:FormItem label="Office phone">
+							<s:Label id="sell_officephoneLabel" text=""/>
+						</s:FormItem>
+						<s:FormItem label="Cell phone">
+							<s:Label id="sell_cellphoneLabel" text=""/>
+						</s:FormItem>
+						<s:FormItem label="Email">
+							<s:Label id="sell_emailLabel" text=""/>
+						</s:FormItem>
+						<s:FormItem label="Premises">
+							<s:Label id="sell_premisesLabel" text=""/>
+						</s:FormItem>
+						<s:FormItem label="Street">
+							<s:Label id="sell_streetLabel" text=""/>
+						</s:FormItem>
+						<s:FormItem label="City">
+							<s:Label id="sell_cityLabel" text=""/>
+						</s:FormItem>
+					</s:Form>
+					
+				</s:Group>
+			</s:Scroller>
+		</s:Panel>
+	</s:Panel>
+	<fnicollet:Toaster id="customToaster1" width="100%" height="1%" toastContainerParent="{this}" top="-25">
+	</fnicollet:Toaster>
+	<fnicollet:Toaster id="customToaster2" width="100%" height="1%" toastContainerParent="{this}" top="-25">
+	</fnicollet:Toaster>
+</s:WindowedApplication>

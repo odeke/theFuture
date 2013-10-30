@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<fxpProperties abbreviated="false" authoringTool="Flex Builder" compiles="true" parentProject="34e51ea8-7aa9-417f-81bb-59aa2b1d6e66" projectUUID="34e51ea8-7aa9-417f-81bb-59aa2b1d6e66" pureCatalystProject="false" sdkVersion="4.6.0" uuid="1c8f4d2e-222a-4ff4-994d-72e4b8d30dbc" version="15">
+  <projects/>
+  <src/>
+  <swc>
+    <linked location="sdkPlaceHolder" path="sdkPlaceHolder" position="0" uuid="1c8f4d2e-222a-4ff4-994d-72e4b8d30dbc"/>
+    <linked location="D:/Flex/Inforex_1/libs" path="/libs" position="1" uuid="ccded311-f031-43d0-a85f-e960acc6e0bc"/>
+    <linked location="${DCD_LIB_LOCATION}" path="${DCD_LIB_LOCATION}" position="2" uuid="ccded311-f031-43d0-a85f-e960acc6e0bc"/>
+    <linked location="${DCD_LOCALE_LOCATION}" path="${DCD_LOCALE_LOCATION}" position="3" uuid="ccded311-f031-43d0-a85f-e960acc6e0bc"/>
+    <linked location="${DCD_FIBER_LOCATION}/fiber.swc" path="${DCD_FIBER_LOCATION}/fiber.swc" position="4" uuid="ccded311-f031-43d0-a85f-e960acc6e0bc"/>
+    <linked location="${DCD_FIBER_LOCALE_LOCATION}/fiber_rb.swc" path="${DCD_FIBER_LOCALE_LOCATION}/fiber_rb.swc" position="5" uuid="ccded311-f031-43d0-a85f-e960acc6e0bc"/>
+    <linked location="${DCD_FIBER_LOCATION}/playerfds.swc" path="${DCD_FIBER_LOCATION}/playerfds.swc" position="6" uuid="ccded311-f031-43d0-a85f-e960acc6e0bc"/>
+  </swc>
+  <misc/>
+  <theme/>
+  <mxmlFormattingPrefs groupAttributesByState="true" maxLineWidth="100" mxmlAlignAttributes="true" mxmlAttributeOrder="id,userLabel,includeIn,excludeFrom,visible,x,y,z,left,right,top,bottom,width,height,minWidth,minHeight,maxWidth,maxHeight,label" mxmlKeepAttributeValuesOrganized="true"/>
+</fxpProperties>

@@ -1,0 +1,258 @@
+
+<model xmlns="http://ns.adobe.com/Fiber/1.0">
+  <annotation name="ActionScriptGeneration">
+    <item name="FullyQualifyReferences">true</item>
+  </annotation>
+  <entity name="MyRate">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">MyRate</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">RatesService</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getMyRates">
+      <item name="propertySpecifier">currency_id,selling,dated,buying,currency_abbr</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="currency_id" type="integer"/>
+    <property name="selling" type="string"/>
+    <property name="dated" type="date"/>
+    <property name="buying" type="string"/>
+    <property name="currency_abbr" type="string"/>
+  </entity>
+  <service name="RatesService">
+    <annotation name="ActionScriptGeneration">
+      <item name="Source">RatesService</item>
+      <item name="ServiceType">RemoteObject</item>
+      <item name="Package">services.ratesservice</item>
+      <item name="Endpoint">http://bulamu.net/inforex/inforex/Inforex_1/gateway.php</item>
+      <item name="Destination">RatesService</item>
+    </annotation>
+    <annotation name="ServiceTypeGroup">
+      <item name="ServiceBackendType">PHP</item>
+    </annotation>
+    <annotation name="ServiceConfig">
+      <item name="PHP_RELATIVE_LOCATION">Inforex_1/services/RatesService.php</item>
+      <item name="PHP_SERVER_ROOT">D:\wamp\www\flex\</item>
+      <item name="DEFAULT_ENTITY_PACKAGE">valueObjects</item>
+      <item name="PHP_SERVICES_FOLDER">D:\wamp\www\flex\Inforex_1\services</item>
+      <item name="PHP_LOCATION">D:/wamp/www/flex/Inforex_1/services/RatesService.php</item>
+      <item name="LINKED_FILE">RatesService.php</item>
+      <item name="PHP_SERVER_ROOT_URL">http://bulamu.net/inforex/inforex/</item>
+      <item name="ABSOLUTE_ENDPOINT">http://bulamu.net/inforex/inforex/Inforex_1/gateway.php</item>
+      <item name="PHP_CLASS_NAME">RatesService</item>
+    </annotation>
+    <function name="getAllRates" return-type="opaque[]">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+      </annotation>
+    </function>
+    <function name="getRatesByID" return-type="Rates">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="itemID" type="integer"/>
+    </function>
+    <function name="createRates" return-type="integer">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="item" type="Rates"/>
+    </function>
+    <function name="updateRates" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="item" type="opaque"/>
+    </function>
+    <function name="deleteRates" return-type="void">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="itemID" type="integer"/>
+    </function>
+    <function name="count" return-type="integer">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+      </annotation>
+    </function>
+    <function name="getRates_paged" return-type="Rates[]">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque,opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="startIndex" type="integer"/>
+      <parameter name="numItems" type="integer"/>
+    </function>
+    <function name="getMyRates" return-type="MyRates[]">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">currency_id,selling,rates_id,dated,buying,bureaus_id,currency_abbr</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="itemID" type="opaque"/>
+    </function>
+    <function name="getMyRates2" return-type="Test_Rates_dt[]">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">currency_id,selling,rates_id,dated,buying,bureaus_id,currency_abbr</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="itemID" type="opaque"/>
+    </function>
+    <function name="updateRates2" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="item" type="opaque"/>
+    </function>
+    <function name="createMyRates" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="item" type="Test_Rates_dt"/>
+    </function>
+  </service>
+  <entity name="Rates" persistent="true">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Rates</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">RatesService</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="DataManagement">
+      <item name="create">createRates</item>
+      <item name="get">getRatesByID</item>
+      <item name="delete">deleteRates</item>
+      <item name="fillFunc">getRates_paged</item>
+      <item name="managingService">RatesService</item>
+    </annotation>
+    <annotation name="getRatesByID">
+      <item name="propertySpecifier">rates_id,bureaus_id,currency_id,selling,dated,buying,currency_abbr</item>
+    </annotation>
+    <annotation name="getAllRates">
+      <item name="propertySpecifier">rates_id,currency_id,bureaus_id,buying,selling,dated</item>
+    </annotation>
+    <annotation name="getRates_paged">
+      <item name="propertySpecifier">rates_id,bureaus_id,currency_id,selling,dated,buying,currency_abbr</item>
+      <item name="pagingEnabled">true</item>
+      <item name="positionalPagingParameters">true</item>
+      <item name="countOperation">count</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <annotation name="getMyRates2">
+      <item name="propertySpecifier">currency_id,selling,rates_id,dated,buying,bureaus_id,currency_abbr</item>
+    </annotation>
+    <annotation name="getMyRates">
+      <item name="propertySpecifier">currency_id,selling,dated,buying,currency_abbr</item>
+    </annotation>
+    <id name="rates_id" type="integer"/>
+    <property name="bureaus_id" type="integer"/>
+    <property name="currency_id" type="integer"/>
+    <property name="selling" type="string"/>
+    <property name="dated" type="date"/>
+    <property name="buying" type="string"/>
+    <property name="currency_abbr" type="string"/>
+  </entity>
+  <entity name="MyRates">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">MyRates</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">RatesService,RatesServiceDummy</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getMyRates">
+      <item name="propertySpecifier">currency_id,selling,rates_id,dated,buying,bureaus_id,currency_abbr</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="currency_id" type="integer"/>
+    <property name="selling" type="string"/>
+    <property name="rates_id" type="integer" required="true"/>
+    <property name="dated" type="date"/>
+    <property name="buying" type="string"/>
+    <property name="bureaus_id" type="integer" required="true"/>
+    <property name="currency_abbr" type="string"/>
+  </entity>
+  <entity name="Test_Rates_dt">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Test_Rates_dt</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">RatesService,RatesServiceDummy</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getMyRates2">
+      <item name="propertySpecifier">currency_id,selling,rates_id,dated,buying,bureaus_id,currency_abbr</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="currency_id" type="integer" required="true"/>
+    <property name="selling" type="string" required="true"/>
+    <property name="rates_id" type="integer" required="true"/>
+    <property name="dated" type="date" required="true"/>
+    <property name="buying" type="string" required="true"/>
+    <property name="bureaus_id" type="integer" required="true"/>
+    <property name="currency_abbr" type="string" required="true"/>
+  </entity>
+</model>

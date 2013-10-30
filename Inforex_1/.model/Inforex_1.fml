@@ -1,0 +1,1088 @@
+
+<model xmlns="http://ns.adobe.com/Fiber/1.0">
+  <annotation name="ActionScriptGeneration">
+    <item name="FullyQualifyReferences">true</item>
+  </annotation>
+  <entity name="MyRate">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">MyRate</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">RatesService</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getMyRates">
+      <item name="propertySpecifier">currency_id,selling,dated,buying,currency_abbr</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="currency_id" type="integer"/>
+    <property name="selling" type="string"/>
+    <property name="dated" type="date"/>
+    <property name="buying" type="string"/>
+    <property name="currency_abbr" type="string"/>
+  </entity>
+  <entity name="CustomDatatype">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">CustomDatatype</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">RatesService</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getBids">
+      <item name="propertySpecifier">bids_id,status,street,from_currency,bids_status,auctions_id,city,amount,expires,bids_offer,email,officephone,bureaus_name,created,premises,cellphone,bids_dated,auctioner_id,min_rate,to_currency</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="bids_id" type="integer" required="true"/>
+    <property name="status" type="integer" required="true"/>
+    <property name="street" type="string" required="true"/>
+    <property name="from_currency" type="string" required="true"/>
+    <property name="bids_status" type="integer" required="true"/>
+    <property name="auctions_id" type="integer" required="true"/>
+    <property name="city" type="string" required="true"/>
+    <property name="amount" type="string" required="true"/>
+    <property name="expires" type="date" required="true"/>
+    <property name="bids_offer" type="string" required="true"/>
+    <property name="email" type="string" required="true"/>
+    <property name="officephone" type="string" required="true"/>
+    <property name="bureaus_name" type="string" required="true"/>
+    <property name="created" type="date" required="true"/>
+    <property name="premises" type="string" required="true"/>
+    <property name="cellphone" type="string" required="true"/>
+    <property name="bids_dated" type="date" required="true"/>
+    <property name="auctioner_id" type="integer" required="true"/>
+    <property name="min_rate" type="string" required="true"/>
+    <property name="to_currency" type="string" required="true"/>
+  </entity>
+  <entity name="Auctions_Bids">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Auctions_Bids</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">RatesService</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getAuctionBids">
+      <item name="propertySpecifier">bids_offer,bureaus_name,bids_dated,bureaus_id,bids_status,auctions_id</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="bids_offer" type="string" required="true"/>
+    <property name="bureaus_name" type="opaque" required="true"/>
+    <property name="bids_dated" type="opaque" required="true"/>
+    <property name="bureaus_id" type="integer" required="true"/>
+    <property name="bids_status" type="opaque" required="true"/>
+    <property name="auctions_id" type="integer" required="true"/>
+  </entity>
+  <service name="RatesService">
+    <annotation name="ActionScriptGeneration">
+      <item name="Source">RatesService</item>
+      <item name="ServiceType">RemoteObject</item>
+      <item name="Package">services.ratesservice</item>
+      <item name="Endpoint">http://localhost/flex/Inforex_1/gateway.php</item>
+      <item name="Destination">RatesService</item>
+    </annotation>
+    <annotation name="ServiceTypeGroup">
+      <item name="ServiceBackendType">PHP</item>
+    </annotation>
+    <annotation name="ServiceConfig">
+      <item name="PHP_RELATIVE_LOCATION">Inforex_1/services/RatesService.php</item>
+      <item name="PHP_SERVER_ROOT">E:\wamp\www\flex\</item>
+      <item name="DEFAULT_ENTITY_PACKAGE">valueObjects</item>
+      <item name="PHP_SERVICES_FOLDER">E:\wamp\www\flex\Inforex_1\services</item>
+      <item name="PHP_LOCATION">E:/wamp/www/flex/Inforex_1/services/RatesService.php</item>
+      <item name="LINKED_FILE">RatesService.php</item>
+      <item name="PHP_SERVER_ROOT_URL">http://localhost/flex/</item>
+      <item name="ABSOLUTE_ENDPOINT">http://localhost/flex/Inforex_1/gateway.php</item>
+      <item name="PHP_CLASS_NAME">RatesService</item>
+    </annotation>
+    <function name="getAllRates" return-type="opaque[]">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+      </annotation>
+    </function>
+    <function name="getRatesByID" return-type="Rates">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="itemID" type="integer"/>
+    </function>
+    <function name="createRates" return-type="integer">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="item" type="Rates"/>
+    </function>
+    <function name="updateRates" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="item" type="opaque"/>
+    </function>
+    <function name="deleteRates" return-type="void">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="itemID" type="integer"/>
+    </function>
+    <function name="count" return-type="integer">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+      </annotation>
+    </function>
+    <function name="getRates_paged" return-type="Rates[]">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque,opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="startIndex" type="integer"/>
+      <parameter name="numItems" type="integer"/>
+    </function>
+    <function name="getMyRates" return-type="MyRates[]">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">currency_id,selling,rates_id,dated,buying,bureaus_id,currency_abbr</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="itemID" type="opaque"/>
+    </function>
+    <function name="getMyRates2" return-type="Test_Rates_dt[]">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">currency_id,selling,rates_id,dated,buying,bureaus_id,currency_abbr</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="itemID" type="opaque"/>
+    </function>
+    <function name="updateRates2" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="item" type="opaque"/>
+    </function>
+    <function name="createMyRates" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="item" type="Test_Rates_dt"/>
+    </function>
+    <function name="userAuth" return-type="Auth_Data">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">integer</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">init_data,bureaus_name,token,bureaus_id</item>
+      </annotation>
+      <parameter name="item" type="opaque"/>
+    </function>
+    <function name="getActiveAuctions" return-type="Auctions[]">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">status,from_currency,street,order_id,auctions_id,city,amount,expires,bureaus_name,officephone,email,premises,cellphone,min_rate,bureaus_id,to_currency</item>
+      </annotation>
+    </function>
+    <function name="getAuctionsDetails" return-type="opaque[]">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+        <item name="inputParams">opaque</item>
+        <item name="inputParamNames">auctionId</item>
+      </annotation>
+      <parameter name="auctionId" type="opaque"/>
+    </function>
+    <function name="createBid" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="item" type="opaque"/>
+    </function>
+    <function name="getLatestBid" return-type="Latest_Bid">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">bids_offer,bureaus_name,bids_dated,bureaus_id</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="itemID" type="opaque"/>
+    </function>
+    <function name="getInbox" return-type="Inbox[]">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">message,from_user_id,bureaus_name,dated,msg_id,msg_status</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="itemID" type="opaque"/>
+    </function>
+    <function name="getSent" return-type="Inbox[]">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">message,bureaus_name,dated,msg_id,msg_status</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="itemID" type="opaque"/>
+    </function>
+    <function name="composeMsg" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="item" type="opaque"/>
+    </function>
+    <function name="createAuction" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="item" type="Auctions"/>
+    </function>
+    <function name="getCurrencies" return-type="Currencies[]">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">currency_id,curr_weight,currency_name,currency_abbr</item>
+      </annotation>
+    </function>
+    <function name="cancelAuction" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="itemID" type="opaque"/>
+    </function>
+    <function name="getBureaus" return-type="Bureaus[]">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">bureaus_name,bureaus_id</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+      </annotation>
+    </function>
+    <function name="deleteMsg" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="item" type="opaque"/>
+    </function>
+    <function name="readMsg" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="item" type="opaque"/>
+    </function>
+    <function name="getBureauDetails" return-type="Bureau_Details">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">email,officephone,bureaus_name,premises,cellphone,street,dated,bureaus_id,city</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="item" type="opaque"/>
+    </function>
+    <function name="updateProfile" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="item" type="opaque"/>
+    </function>
+    <function name="getBids" return-type="My_Bids[]">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">bids_id,status,street,from_currency,bids_status,auctions_id,city,amount,expires,bids_offer,email,officephone,bureaus_name,created,premises,cellphone,bids_dated,auctioner_id,min_rate,to_currency</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="itemID" type="opaque"/>
+    </function>
+    <function name="getMyAuctions" return-type="My_Auctions[]">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">status,from_currency,street,bids,auctions_id,city,amount,expires,bureaus_name,officephone,email,premises,cellphone,min_rate,bureaus_id,to_currency</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="itemID" type="opaque"/>
+    </function>
+    <function name="checkUpdates" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="versionNo" type="opaque"/>
+    </function>
+    <function name="closeAuction" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="item" type="opaque"/>
+    </function>
+    <function name="logAccess" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque,opaque,opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="activity" type="opaque"/>
+      <parameter name="ip" type="opaque"/>
+      <parameter name="bureaus_id" type="opaque"/>
+    </function>
+    <function name="getOrderId" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+      </annotation>
+    </function>
+    <function name="getWinnerBid" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="itemID" type="opaque"/>
+    </function>
+    <function name="getNotifications" return-type="Inbox[]">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">message,from_user_id,bureaus_name,msg_type,dated,msg_id,msg_status</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="itemID" type="opaque"/>
+    </function>
+    <function name="talkToMe" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque,opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="topic" type="opaque"/>
+      <parameter name="recipient" type="opaque"/>
+    </function>
+    <function name="getAnnouncements" return-type="Announcement[]">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">announcement,announcer,dated</item>
+      </annotation>
+    </function>
+    <function name="getActiveSales" return-type="Auctions[]">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">status,from_currency,street,order_id,auctions_id,city,amount,expires,bureaus_name,officephone,email,premises,cellphone,min_rate,bureaus_id,to_currency</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+      </annotation>
+    </function>
+    <function name="getLatestOffer" return-type="Latest_Bid">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">bids_offer,officephone,email,bureaus_name,premises,cellphone,street,bids_dated,bureaus_id,country,city,bureaus_user</item>
+      </annotation>
+      <parameter name="itemID" type="opaque"/>
+    </function>
+    <function name="createOffer" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="item" type="opaque"/>
+    </function>
+    <function name="getSaleDetails" return-type="opaque[]">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="auctionId" type="opaque"/>
+    </function>
+    <function name="createSale" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="item" type="opaque"/>
+    </function>
+    <function name="getOffers" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="itemID" type="opaque"/>
+    </function>
+    <function name="getMySales" return-type="My_Auctions[]">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">status,from_currency,street,bids,auctions_id,city,amount,expires,bureaus_name,officephone,email,premises,cellphone,min_rate,bureaus_id,to_currency</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="itemID" type="opaque"/>
+    </function>
+    <function name="getAuctionOffers" return-type="Auction_Bids[]">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">bids_expiry,bids_offer,officephone,bureaus_name,premises,cellphone,street,bids_dated,bureaus_id,bids_status,auctions_id,city</item>
+      </annotation>
+      <parameter name="itemID" type="opaque"/>
+    </function>
+    <function name="getSaleBids" return-type="Auction_Bids[]">
+      <annotation name="analyze group">
+        <item name="analyzed">true</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <annotation name="ValidProperties">
+        <item name="propertySpecifier">bids_expiry,bids_offer,officephone,bureaus_name,premises,cellphone,street,bids_dated,bureaus_id,bids_status,auctions_id,city</item>
+      </annotation>
+      <parameter name="itemID" type="opaque"/>
+    </function>
+    <function name="cancelSale" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="itemID" type="opaque"/>
+    </function>
+    <function name="closeSale" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="item" type="opaque"/>
+    </function>
+    <function name="getWinnerOffer" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="itemID" type="opaque"/>
+    </function>
+    <function name="getACurrencyFromId" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="inputParams">opaque</item>
+        <item name="returnType">opaque</item>
+      </annotation>
+      <parameter name="id" type="opaque"/>
+    </function>
+    <function name="getBureausNumbersForAlerts" return-type="opaque">
+      <annotation name="analyze group">
+        <item name="analyzed">false</item>
+      </annotation>
+      <annotation name="original signature">
+        <item name="returnType">opaque</item>
+      </annotation>
+    </function>
+  </service>
+  <entity name="Rates" persistent="true">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Rates</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">RatesService,RatesServiceDummy</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="DataManagement">
+      <item name="create">createRates</item>
+      <item name="get">getRatesByID</item>
+      <item name="delete">deleteRates</item>
+      <item name="fillFunc">getRates_paged</item>
+      <item name="managingService">RatesService</item>
+    </annotation>
+    <annotation name="getRatesByID">
+      <item name="propertySpecifier">rates_id,bureaus_id,currency_id,selling,dated,buying,currency_abbr</item>
+    </annotation>
+    <annotation name="getAllRates">
+      <item name="propertySpecifier">rates_id,currency_id,bureaus_id,buying,selling,dated</item>
+    </annotation>
+    <annotation name="getRates_paged">
+      <item name="propertySpecifier">rates_id,bureaus_id,currency_id,selling,dated,buying,currency_abbr</item>
+      <item name="pagingEnabled">true</item>
+      <item name="positionalPagingParameters">true</item>
+      <item name="countOperation">count</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <annotation name="getMyRates2">
+      <item name="propertySpecifier">currency_id,selling,rates_id,dated,buying,bureaus_id,currency_abbr</item>
+    </annotation>
+    <annotation name="getMyRates">
+      <item name="propertySpecifier">currency_id,selling,dated,buying,currency_abbr</item>
+    </annotation>
+    <id name="rates_id" type="integer"/>
+    <property name="bureaus_id" type="integer"/>
+    <property name="currency_id" type="integer"/>
+    <property name="selling" type="string"/>
+    <property name="dated" type="date"/>
+    <property name="buying" type="string"/>
+    <property name="currency_abbr" type="string"/>
+  </entity>
+  <entity name="Auction_Bids">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Auction_Bids</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">RatesService,RatesServiceDummy</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <annotation name="getMyAuctions">
+      <item name="propertySpecifier">status,from_currency,street,bids,auctions_id,city,amount,expires,bureaus_name,officephone,email,premises,cellphone,min_rate,bureaus_id,to_currency</item>
+    </annotation>
+    <annotation name="getAuctionOffers">
+      <item name="propertySpecifier">bids_expiry,bids_offer,officephone,bureaus_name,premises,cellphone,street,bids_dated,bureaus_id,bids_status,auctions_id,city</item>
+    </annotation>
+    <annotation name="getSaleBids">
+      <item name="propertySpecifier">bids_expiry,bids_offer,officephone,bureaus_name,premises,cellphone,street,bids_dated,bureaus_id,bids_status,auctions_id,city</item>
+    </annotation>
+    <property name="status" type="string" required="true"/>
+    <property name="from_currency" type="string" required="true"/>
+    <property name="bids" type="integer" required="true"/>
+    <property name="amount" type="string" required="true"/>
+    <property name="expires" type="date" required="true"/>
+    <property name="email" type="string" required="true"/>
+    <property name="min_rate" type="string" required="true"/>
+    <property name="to_currency" type="string" required="true"/>
+    <property name="bids_expiry" type="opaque" required="true"/>
+    <property name="bids_offer" type="string" required="true"/>
+    <property name="officephone" type="opaque" required="true"/>
+    <property name="bureaus_name" type="string" required="true"/>
+    <property name="premises" type="opaque" required="true"/>
+    <property name="cellphone" type="opaque" required="true"/>
+    <property name="street" type="opaque" required="true"/>
+    <property name="bids_dated" type="date" required="true"/>
+    <property name="bureaus_id" type="string" required="true"/>
+    <property name="bids_status" type="string" required="true"/>
+    <property name="auctions_id" type="string" required="true"/>
+    <property name="city" type="opaque" required="true"/>
+  </entity>
+  <entity name="Latest_Bid">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Latest_Bid</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">RatesService</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getLatestBid">
+      <item name="propertySpecifier">bids_offer,bureaus_name,bids_dated,bureaus_id</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <annotation name="getAuctionBids">
+      <item name="propertySpecifier">bids_offer,bureaus_name,bids_dated,bureaus_id,bids_status,auctions_id</item>
+    </annotation>
+    <annotation name="getLatestOffer">
+      <item name="propertySpecifier">bids_offer,officephone,email,bureaus_name,premises,cellphone,street,bids_dated,bureaus_id,country,city,bureaus_user</item>
+    </annotation>
+    <property name="bids_status" type="opaque" required="true"/>
+    <property name="auctions_id" type="integer" required="true"/>
+    <property name="bids_offer" type="string" required="true"/>
+    <property name="officephone" type="opaque" required="true"/>
+    <property name="email" type="opaque" required="true"/>
+    <property name="bureaus_name" type="opaque" required="true"/>
+    <property name="premises" type="opaque" required="true"/>
+    <property name="cellphone" type="opaque" required="true"/>
+    <property name="street" type="opaque" required="true"/>
+    <property name="bids_dated" type="opaque" required="true"/>
+    <property name="bureaus_id" type="integer" required="true"/>
+    <property name="country" type="opaque" required="true"/>
+    <property name="city" type="opaque" required="true"/>
+    <property name="bureaus_user" type="opaque" required="true"/>
+  </entity>
+  <entity name="MyRates">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">MyRates</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">RatesService,RatesServiceDummy</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getMyRates">
+      <item name="propertySpecifier">currency_id,selling,rates_id,dated,buying,bureaus_id,currency_abbr</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="currency_id" type="integer"/>
+    <property name="selling" type="string"/>
+    <property name="rates_id" type="integer" required="true"/>
+    <property name="dated" type="date"/>
+    <property name="buying" type="string"/>
+    <property name="bureaus_id" type="integer" required="true"/>
+    <property name="currency_abbr" type="string"/>
+  </entity>
+  <entity name="Announcement">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Announcement</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">RatesService,RatesServiceDummy</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getAnnouncements">
+      <item name="propertySpecifier">announcement,announcer,dated</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="announcement" type="string" required="true"/>
+    <property name="announcer" type="string" required="true"/>
+    <property name="dated" type="date" required="true"/>
+  </entity>
+  <entity name="Auctions">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Auctions</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">RatesService,RatesServiceDummy</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getActiveAuctions">
+      <item name="propertySpecifier">status,from_currency,street,order_id,auctions_id,city,amount,expires,bureaus_name,officephone,email,premises,cellphone,min_rate,bureaus_id,to_currency</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <annotation name="getMyAuctions">
+      <item name="propertySpecifier">status,from_currency,street,auctions_id,city,amount,expires,bureaus_name,officephone,email,premises,cellphone,min_rate,bureaus_id,to_currency</item>
+    </annotation>
+    <annotation name="getActiveSales">
+      <item name="propertySpecifier">status,from_currency,street,order_id,auctions_id,city,amount,expires,bureaus_name,officephone,email,premises,cellphone,min_rate,bureaus_id,to_currency</item>
+    </annotation>
+    <property name="status" type="string" required="true"/>
+    <property name="from_currency" type="string" required="true"/>
+    <property name="street" type="string" required="true"/>
+    <property name="order_id" type="integer" required="true"/>
+    <property name="auctions_id" type="integer" required="true"/>
+    <property name="city" type="string" required="true"/>
+    <property name="amount" type="string" required="true"/>
+    <property name="expires" type="date" required="true"/>
+    <property name="bureaus_name" type="string" required="true"/>
+    <property name="officephone" type="string" required="true"/>
+    <property name="email" type="string" required="true"/>
+    <property name="premises" type="string" required="true"/>
+    <property name="cellphone" type="string" required="true"/>
+    <property name="min_rate" type="string" required="true"/>
+    <property name="bureaus_id" type="integer" required="true"/>
+    <property name="to_currency" type="string" required="true"/>
+  </entity>
+  <entity name="Currencies">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Currencies</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">RatesService,RatesServiceDummy</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getCurrencies">
+      <item name="propertySpecifier">currency_id,curr_weight,currency_name,currency_abbr</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="currency_id" type="integer" required="true"/>
+    <property name="curr_weight" type="integer" required="true"/>
+    <property name="currency_name" type="string" required="true"/>
+    <property name="currency_abbr" type="string" required="true"/>
+  </entity>
+  <entity name="Bureaus">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Bureaus</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">RatesService,RatesServiceDummy</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getBureaus">
+      <item name="propertySpecifier">bureaus_name,bureaus_id</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="bureaus_name" type="string" required="true"/>
+    <property name="bureaus_id" type="integer" required="true"/>
+  </entity>
+  <entity name="Bureau_Details">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Bureau_Details</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">RatesService</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getBureauDetails">
+      <item name="propertySpecifier">email,officephone,bureaus_name,premises,cellphone,street,dated,bureaus_id,city</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="email" type="string"/>
+    <property name="officephone" type="string"/>
+    <property name="bureaus_name" type="string"/>
+    <property name="premises" type="string"/>
+    <property name="cellphone" type="string"/>
+    <property name="street" type="string"/>
+    <property name="dated" type="date" required="true"/>
+    <property name="bureaus_id" type="integer"/>
+    <property name="city" type="string"/>
+  </entity>
+  <entity name="Auth_Data">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Auth_Data</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">RatesService,RatesServiceDummy</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="userAuth">
+      <item name="propertySpecifier">init_data,bureaus_name,token,bureaus_id</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="init_data" type="opaque" required="true"/>
+    <property name="bureaus_name" type="string" required="true"/>
+    <property name="token" type="string" required="true"/>
+    <property name="bureaus_id" type="integer" required="true"/>
+  </entity>
+  <entity name="My_Auctions">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">My_Auctions</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">RatesService</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getMyAuctions">
+      <item name="propertySpecifier">status,from_currency,street,bids,auctions_id,city,amount,expires,bureaus_name,officephone,email,premises,cellphone,min_rate,bureaus_id,to_currency</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <annotation name="getMySales">
+      <item name="propertySpecifier">status,from_currency,street,bids,auctions_id,city,amount,expires,bureaus_name,officephone,email,premises,cellphone,min_rate,bureaus_id,to_currency</item>
+    </annotation>
+    <property name="status" type="string" required="true"/>
+    <property name="from_currency" type="string" required="true"/>
+    <property name="street" type="string" required="true"/>
+    <property name="bids" type="integer" required="true"/>
+    <property name="auctions_id" type="integer" required="true"/>
+    <property name="city" type="string" required="true"/>
+    <property name="amount" type="string" required="true"/>
+    <property name="expires" type="date" required="true"/>
+    <property name="bureaus_name" type="string" required="true"/>
+    <property name="officephone" type="string" required="true"/>
+    <property name="email" type="string" required="true"/>
+    <property name="premises" type="string" required="true"/>
+    <property name="cellphone" type="string" required="true"/>
+    <property name="min_rate" type="string" required="true"/>
+    <property name="bureaus_id" type="integer" required="true"/>
+    <property name="to_currency" type="string" required="true"/>
+  </entity>
+  <entity name="My_Bids">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">My_Bids</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">RatesService,RatesServiceDummy</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getBids">
+      <item name="propertySpecifier">bids_id,status,street,from_currency,bids_status,auctions_id,city,amount,expires,bids_offer,email,officephone,bureaus_name,created,premises,cellphone,bids_dated,auctioner_id,min_rate,to_currency</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="bids_id" type="integer"/>
+    <property name="status" type="integer"/>
+    <property name="street" type="string"/>
+    <property name="from_currency" type="string"/>
+    <property name="bids_status" type="string"/>
+    <property name="auctions_id" type="integer"/>
+    <property name="city" type="string"/>
+    <property name="amount" type="string"/>
+    <property name="expires" type="date"/>
+    <property name="bids_offer" type="string"/>
+    <property name="email" type="string"/>
+    <property name="officephone" type="string"/>
+    <property name="bureaus_name" type="string"/>
+    <property name="created" type="date"/>
+    <property name="premises" type="string"/>
+    <property name="cellphone" type="string"/>
+    <property name="bids_dated" type="date"/>
+    <property name="auctioner_id" type="integer"/>
+    <property name="min_rate" type="string"/>
+    <property name="to_currency" type="string"/>
+  </entity>
+  <entity name="Inbox">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Inbox</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">RatesService,RatesServiceDummy</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getInbox">
+      <item name="propertySpecifier">message,from_user_id,bureaus_name,dated,msg_id,msg_status</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <annotation name="getSent">
+      <item name="propertySpecifier">message,bureaus_name,dated,msg_id,msg_status</item>
+    </annotation>
+    <annotation name="getNotifications">
+      <item name="propertySpecifier">message,from_user_id,bureaus_name,msg_type,dated,msg_id,msg_status</item>
+    </annotation>
+    <property name="message" type="string" required="true"/>
+    <property name="from_user_id" type="integer" required="true"/>
+    <property name="bureaus_name" type="string" required="true"/>
+    <property name="msg_type" type="integer" required="true"/>
+    <property name="dated" type="date" required="true"/>
+    <property name="msg_id" type="integer" required="true"/>
+    <property name="msg_status" type="string" required="true"/>
+  </entity>
+  <entity name="Test_Rates_dt">
+    <annotation name="EntityProperties">
+      <item name="EntityOriginalName">Test_Rates_dt</item>
+    </annotation>
+    <annotation name="service Group">
+      <item name="service">RatesService,RatesServiceDummy</item>
+    </annotation>
+    <annotation name="ServerProperties">
+      <item name="IncludeRemoteClass">nonempty</item>
+    </annotation>
+    <annotation name="getMyRates2">
+      <item name="propertySpecifier">currency_id,selling,rates_id,dated,buying,bureaus_id,currency_abbr</item>
+    </annotation>
+    <annotation name="ActionScriptGeneration">
+      <item name="Package">valueObjects</item>
+    </annotation>
+    <property name="currency_id" type="integer" required="true"/>
+    <property name="selling" type="string" required="true"/>
+    <property name="rates_id" type="integer" required="true"/>
+    <property name="dated" type="date" required="true"/>
+    <property name="buying" type="string" required="true"/>
+    <property name="bureaus_id" type="integer" required="true"/>
+    <property name="currency_abbr" type="string" required="true"/>
+  </entity>
+</model>

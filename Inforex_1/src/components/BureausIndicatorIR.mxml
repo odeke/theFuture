@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:MXAdvancedDataGridItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+								  xmlns:s="library://ns.adobe.com/flex/spark" 
+								  xmlns:mx="library://ns.adobe.com/flex/mx" 
+								  focusEnabled="true">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			import mx.utils.ObjectUtil;
+			
+			[Embed(source="assets/bureau_online.png")]
+			[Bindable]
+			public var bureau_online:Class;
+			
+			[Embed(source="assets/bureau_offline.png")]
+			[Bindable]
+			public var bureau_offline:Class;            
+			
+			override public function set data(value:Object):void {      
+				if(value != null)  {
+					super.data = value;
+					//trace(ObjectUtil.toString(value));
+					bureaus_name.text = value.bureau;
+					if (value.last_seen == 1) {
+						online_indicatorIMG.source=new bureau_online();
+						online_indicatorIMG.toolTip="Online";
+					}
+					else {
+						online_indicatorIMG.source=new bureau_offline();
+						online_indicatorIMG.toolTip="Offline";
+					}
+				}
+				// Dispatch the dataChange event.
+				dispatchEvent(new FlexEvent(FlexEvent.DATA_CHANGE));
+			}
+		]]>
+	</fx:Script>
+	
+	<mx:Image id="online_indicatorIMG"
+			  y="8" x="2"/>
+	<s:Label id="bureaus_name" 
+			 x="24" y="6" text=""
+			 width="175" maxWidth="175"
+			 paddingBottom="12" paddingTop="4"/>
+</s:MXAdvancedDataGridItemRenderer>
